@@ -1,0 +1,30 @@
+{
+    "compilerOptions": {
+        "target": "ES2020",
+        "module": "commonjs",
+        "lib": [
+            "ES2020"
+        ],
+        "outDir": "./dist",
+        "strict": true,
+        "esModuleInterop": true,
+        "skipLibCheck": true,
+        "forceConsistentCasingInFileNames": true,
+        "baseUrl": ".",
+        "paths": {
+            "@shared/*": ["../types/*"]
+        },
+        "allowSyntheticDefaultImports": true
+    },
+    "include": [
+        "**/*.ts",
+        "../types/**/*.ts"
+    ],
+    "exclude": [
+        "node_modules",
+        "dist"
+    ],
+    "ts-node": {
+        "esm": false
+    }
+}
