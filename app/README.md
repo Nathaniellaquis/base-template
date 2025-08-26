@@ -112,7 +112,7 @@ EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN=your-auth-domain
 
 ### Authentication
 ```tsx
-const { user, token, signIn, logout } = useAuth();
+const { user, token, signIn, signOut } = useAuth();
 
 // Sign in
 await signIn('email@example.com', 'password');

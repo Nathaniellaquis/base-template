@@ -18,6 +18,22 @@ expo-env.d.ts
 *.key
 *.mobileprovision
 
+# iOS
+ios/Pods/
+ios/build/
+*.xcworkspace/xcuserdata/
+*.xcodeproj/xcuserdata/
+
+# Android
+android/build/
+android/app/build/
+android/.gradle/
+*.apk
+*.aab
+
+# VS Code (uncomment if you want to gitignore VS Code settings)
+# .vscode/
+
 # Metro
 .metro-health-check*
 

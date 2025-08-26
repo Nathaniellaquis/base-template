@@ -1,43 +1,50 @@
-import { updateUserSchema, User } from '@shared/user';
-import { TRPCError } from '@trpc/server';
+import { updateUserSchema } from '@shared';
 import { ObjectId } from 'mongodb';
-import { getDb } from '../../db';
-import { protectedProcedure } from '../../trpc/trpc';
+import { getUserCollection } from '@/config/mongodb';
+import { protectedProcedure } from '@/trpc/trpc';
+import { mongoDocToUser } from '@/utils/database/mongodb';
+import { errors } from '@/utils/errors';
+import { calculateProfileCompleteness } from '@/services/user';
 
 export const updateUser = protectedProcedure
     .input(updateUserSchema)
     .mutation(async ({ ctx, input }) => {
         // Validate the user exists (should always be true if context works)
         if (!ctx.user._id) {
-            throw new TRPCError({
-                code: 'NOT_FOUND',
-                message: 'User not found',
-            });
+            throw errors.notFound('User');
         }
 
-        // Update the user directly here
-        const db = await getDb();
+        // Update the user
+        const usersCollection = getUserCollection();
 
-        const result = await db.collection<User>('users').findOneAndUpdate(
-            { _id: new ObjectId(ctx.user._id) } as any,
+        // First, get the current user to merge with updates
+        const currentUser = await usersCollection.findOne({ _id: new ObjectId(ctx.user._id) });
+        if (!currentUser) {
+            throw errors.notFound('User');
+        }
+
+        // Merge updates with current user
+        const updatedUserData = { ...currentUser, ...input };
+        
+        // Calculate profile completeness
+        const profileCompleteness = calculateProfileCompleteness(updatedUserData as any);
+
+        const updatedUserResult = await usersCollection.findOneAndUpdate(
+            { _id: new ObjectId(ctx.user._id) },
             {
                 $set: {
                     ...input,
+                    profileCompleteness,
+                    lastProfileUpdate: new Date(),
                     updatedAt: new Date(),
                 }
             },
             { returnDocument: 'after' }
         );
 
-        if (!result) {
-            throw new TRPCError({
-                code: 'INTERNAL_SERVER_ERROR',
-                message: 'Failed to update user',
-            });
+        if (!updatedUserResult) {
+            throw errors.internal('Failed to update user');
         }
 
-        return {
-            ...result,
-            _id: result._id?.toString(),
-        };
+        return mongoDocToUser(updatedUserResult);
     }); 

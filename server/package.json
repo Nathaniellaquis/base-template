@@ -5,7 +5,10 @@
     "dev": "nodemon",
     "dev:backend": "nodemon",
     "build": "tsc",
-    "start": "node dist/index.js"
+    "start": "node dist/index.js",
+    "reset-onboarding": "ts-node -r tsconfig-paths/register scripts/reset-onboarding.ts",
+    "test-onboarding": "ts-node -r tsconfig-paths/register scripts/test-onboarding.ts",
+    "fix-onboarding": "ts-node -r tsconfig-paths/register scripts/fix-onboarding-data.ts"
   },
   "dependencies": {
     "@trpc/server": "^11.4.3",
@@ -15,6 +18,8 @@
     "firebase-admin": "^13.4.0",
     "joi": "^17.13.3",
     "mongodb": "^6.17.0",
+    "sharp": "^0.33.2",
+    "stripe": "^18.4.0",
     "superjson": "^1.13.3",
     "zod": "^4.0.1"
   },
@@ -22,10 +27,11 @@
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.3",
     "@types/node": "^24.0.12",
+    "@types/sharp": "^0.32.0",
     "nodemon": "^3.1.10",
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
     "typescript": "~5.8.3"
   },
   "private": true
-} 
+}

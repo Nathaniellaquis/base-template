@@ -1,0 +1,309 @@
+# Claude Rules for INGRD Project
+
+## CRITICAL RULES (MUST FOLLOW)
+
+### Growth & User Experience
+- MUST prioritize reducing friction for new users
+- MUST default to signup over login for unauthenticated users
+- MUST show value before requiring payment or extensive information
+- MUST make optional fields clearly optional (mark as "optional")
+- MUST use action-oriented CTAs ("Start Free →" not "Sign Up")
+- MUST track key metrics (signup, activation, retention)
+- MUST consider mobile experience for all features
+
+### Architecture Patterns
+- MUST use dual-auth pattern: Firebase for identity, MongoDB for app data
+- MUST store shared types in `/types/`, app-specific in `/app/types/`
+- MUST use `@shared/*` imports for shared types, never relative imports
+- MUST use Zod schemas for all TRPC input validation
+- MUST follow provider pattern for stateful features (see existing providers)
+
+### Development Process
+- MUST follow 6-phase feature workflow: Research → Proposal → Approval → Implementation → Documentation → Cleanup
+- MUST search for existing patterns before implementing new ones (use grep/Task tools)
+- MUST use TodoWrite for tracking multi-step tasks
+- MUST read files before editing them
+- MUST verify file paths exist before operations
+- MUST avoid impulse coding - think through implementation before creating files
+- MUST prefer editing existing files over creating new ones
+- MUST ensure no redundant components or screens exist
+
+### Security & Safety
+- MUST validate all inputs with Zod schemas
+- MUST use `protectedProcedure` for authenticated routes
+- MUST use `adminProcedure` for admin-only routes
+- MUST handle errors explicitly in TRPC procedures
+- MUST never expose sensitive data (passwords, tokens, keys)
+- MUST use ObjectId wrapper for MongoDB ID operations
+
+### Code Quality
+- MUST use TypeScript strictly (no `any` types without justification)
+- MUST follow existing naming conventions:
+  - PascalCase: Components, Types, Interfaces
+  - camelCase: functions, variables, files
+  - UPPER_SNAKE_CASE: constants
+  - kebab-case: URLs, file paths in some contexts
+- MUST use theme system for all colors/spacing (no hardcoded values)
+- MUST create `.styles.ts` files instead of inline styles
+- MUST write clean, simple, efficient code - avoid over-engineering
+- MUST consolidate similar functionality - no redundant components
+
+## IMPORTANT RULES (SHOULD FOLLOW)
+
+### Communication
+- SHOULD provide concise, focused responses
+- SHOULD show code examples rather than descriptions
+- SHOULD explain non-obvious decisions
+- SHOULD warn about breaking changes
+- SHOULD suggest alternatives when rejecting requests
+
+### Documentation
+- SHOULD update documentation as part of implementation
+- SHOULD create proposals for new features in `/docs/proposals/`
+- SHOULD archive old docs instead of deleting
+- SHOULD keep documentation close to code
+
+### Performance
+- SHOULD memoize expensive computations
+- SHOULD lazy load heavy components
+- SHOULD use React Query caching appropriately
+- SHOULD consider bundle size impacts
+
+### Testing & Validation
+- SHOULD verify TypeScript compilation after changes
+- SHOULD test authentication flows after auth changes
+- SHOULD check for existing tests before modifying features
+- SHOULD validate MongoDB queries work correctly
+
+## PROJECT-SPECIFIC RULES
+
+### TRPC Patterns
+```typescript
+// MUST follow this pattern for procedures
+export const featureRouter = router({
+  getFeature: protectedProcedure
+    .input(z.object({ id: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const { user } = ctx; // MUST destructure user from context
+      // Implementation
+    }),
+});
+```
+
+### Provider Pattern
+```typescript
+// MUST follow this pattern for providers
+const Context = createContext<Value | null>(null);
+
+export function Provider({ children }: { children: React.ReactNode }) {
+  // Implementation
+  return <Context.Provider value={value}>{children}</Context.Provider>;
+}
+
+export function useHook() {
+  const context = useContext(Context);
+  if (!context) {
+    throw new Error('useHook must be used within Provider');
+  }
+  return context;
+}
+```
+
+### MongoDB Operations
+```typescript
+// MUST use ObjectId for ID operations
+import { ObjectId } from 'mongodb';
+
+// Correct
+await db.collection('users').findOne({ _id: new ObjectId(id) });
+
+// Incorrect
+await db.collection('users').findOne({ _id: id });
+```
+
+### Import Organization
+```typescript
+// MUST follow this import order
+import React from 'react';                    // 1. React
+import { View, Text } from 'react-native';   // 2. React Native
+import { useRouter } from 'expo-router';      // 3. Expo
+import { trpc } from '@/providers/trpc';      // 4. Internal absolute
+import { User } from '@shared/user';          // 5. Shared types
+import { Button } from '@/components/ui';     // 6. Components
+import { createStyles } from './styles';      // 7. Relative imports
+```
+
+## WORKFLOW RULES
+
+### When Adding Features
+1. MUST check `/docs/features/` for similar features
+2. MUST check existing routers for patterns
+3. MUST create proposal if feature is medium or larger
+4. MUST update relevant documentation
+
+### When Fixing Bugs
+1. MUST understand root cause before fixing
+2. MUST check for similar issues elsewhere
+3. MUST add error handling if missing
+4. MUST test the fix thoroughly
+
+### When Refactoring
+1. MUST maintain backward compatibility
+2. MUST update all affected imports
+3. MUST run TypeScript compiler
+4. MUST update documentation
+
+## RESPONSE PATTERNS
+
+### For Feature Requests
+```
+1. Acknowledge request
+2. Check existing patterns
+3. Create proposal if needed
+4. Implement following patterns
+5. Update documentation
+6. Confirm completion
+```
+
+### For Bug Reports
+```
+1. Acknowledge issue
+2. Investigate root cause
+3. Explain the problem
+4. Implement fix
+5. Verify solution
+6. Suggest prevention
+```
+
+### For Questions
+```
+1. Provide direct answer
+2. Show code example if relevant
+3. Reference documentation
+4. Suggest next steps
+```
+
+## ANTI-PATTERNS (NEVER DO)
+
+- NEVER use relative imports for types (`../../../types`)
+- NEVER skip error handling to save time
+- NEVER use `any` type without explicit justification
+- NEVER hardcode colors, spacing, or dimensions
+- NEVER create files without updating relevant index exports
+- NEVER modify auth without understanding Firebase + MongoDB sync
+- NEVER use string IDs for MongoDB operations (use ObjectId)
+- NEVER create features without documentation
+- NEVER delete documentation (archive instead)
+- NEVER make breaking changes without discussion
+- NEVER create redundant screens or components
+- NEVER require unnecessary fields during signup
+- NEVER show paywall before demonstrating value
+- NEVER default to login page for new users
+- NEVER create multiple files for the same purpose
+- NEVER impulse code without planning
+
+## DECISION MATRIX
+
+### When to Create a Provider
+- ✅ State needed across multiple screens
+- ✅ Complex state logic
+- ✅ Needs to persist across navigation
+- ❌ Single component state
+- ❌ Simple derived state
+
+### When to Create a New Router
+- ✅ New domain/feature area
+- ✅ 5+ related endpoints
+- ✅ Different auth requirements
+- ❌ 1-2 endpoints (add to existing)
+- ❌ Utilities (add to existing)
+
+### When to Create Shared Types
+- ✅ Used by both frontend and backend
+- ✅ Part of API contract
+- ✅ Domain models
+- ❌ Component props
+- ❌ Internal state types
+- ❌ UI-only types
+
+## TOOLS USAGE
+
+### Use Task Tool When
+- Searching for patterns across many files
+- Need comprehensive analysis
+- Open-ended exploration
+- Multiple search iterations needed
+
+### Use Grep When
+- Know specific pattern to find
+- Need quick file list
+- Want to count occurrences
+- Simple pattern matching
+
+### Use Read When
+- Need to understand full context
+- Editing specific file
+- Reviewing implementation
+- Checking exact syntax
+
+## QUALITY CHECKLIST
+
+Before completing any task:
+- [ ] TypeScript compiles without errors
+- [ ] Follows existing patterns
+- [ ] Error handling in place
+- [ ] Documentation updated
+- [ ] No hardcoded values
+- [ ] Imports organized correctly
+- [ ] TodoWrite tasks completed
+- [ ] Security considered
+- [ ] Performance impact assessed
+- [ ] Breaking changes documented
+- [ ] User friction minimized
+- [ ] Growth impact considered
+- [ ] No redundant code created
+- [ ] Mobile experience verified
+- [ ] Metrics tracking implemented
+
+## CONTINUOUS IMPROVEMENT
+
+These rules should evolve with the project:
+1. Add new patterns as they emerge
+2. Update anti-patterns when discovered
+3. Refine based on team feedback
+4. Document exceptions when made
+5. Review quarterly for relevance
+
+## GROWTH ENGINEERING PRINCIPLES
+
+### User Journey Optimization
+- ALWAYS think "How can we reduce friction?"
+- ALWAYS provide value before asking for commitment
+- ALWAYS make the next action obvious
+- ALWAYS allow users to skip non-essential steps
+- ALWAYS save user progress automatically
+
+### Metrics & Analytics
+- TRACK signup conversion rate
+- TRACK activation rate (key action completion)
+- TRACK time to value (TTV)
+- TRACK feature adoption rates
+- TRACK user retention (D1, D7, D30)
+
+### A/B Testing Mindset
+- TEST significant changes before full rollout
+- TEST one variable at a time
+- TEST with sufficient sample size
+- DOCUMENT test results and learnings
+- ITERATE based on data, not opinions
+
+### Recovery Mechanisms
+- IMPLEMENT abandonment recovery emails
+- SHOW progress indicators
+- OFFER help at friction points
+- PROVIDE clear error messages
+- ENABLE easy rollback/undo
+
+---
+Last Updated: 2025
+Version: 2.0.0

@@ -1,14 +1,16 @@
+import { connectDB } from '@/config/mongodb';
+import { auth } from '@/config/firebase';
+import { createUser, findUserByUid, setUserCustomClaims } from '@/services/user';
+import { createLogger } from '@/utils/logging/logger';
+import { User } from '@shared';
 import { type CreateExpressContextOptions } from '@trpc/server/adapters/express';
 import { type Db } from 'mongodb';
-import { CustomDecodedIdToken } from '../../types/firebase';
-import { User } from '../../types/user';
-import { getDb } from '../db';
-import { auth } from '../firebase';
-import { createUser, findUserByUid, setUserCustomClaims } from '../services/user';
+
+const logger = createLogger('TRPC-Context');
 
 export interface Context {
     user: User | null;
-    firebaseToken: CustomDecodedIdToken | null;
+    firebaseToken: any | null; // Firebase DecodedIdToken
     db: Db;
 }
 
@@ -16,45 +18,39 @@ export async function createContext({ req }: CreateExpressContextOptions): Promi
     const token = req.headers.authorization?.replace('Bearer ', '');
 
     let user: User | null = null;
-    let firebaseToken: CustomDecodedIdToken | null = null;
+    let firebaseToken: any | null = null;
+
+    // Ensure database is connected first
+    const db = await connectDB();
 
     if (token) {
         try {
-            // Firebase returns custom claims at the top level of the decoded token
-            firebaseToken = await auth.verifyIdToken(token) as CustomDecodedIdToken;
+            // Verify Firebase token
+            firebaseToken = await auth.verifyIdToken(token);
 
-            // Check if user has custom claims (mongoId)
-            if (firebaseToken.mongoId) {
-                // We have the mongoId in the token - no DB query needed!
-                user = {
-                    uid: firebaseToken.uid,
-                    email: firebaseToken.email!,
-                    _id: firebaseToken.mongoId,
-                    role: 'user', // Role comes from DB, not custom claims
-                    emailVerified: firebaseToken.email_verified || false,
-                    displayName: firebaseToken.name,
-                };
+            // Always fetch full user from MongoDB for consistency
+            const dbUser = await findUserByUid(firebaseToken.uid);
+
+            if (dbUser) {
+                user = dbUser;
             } else {
-                // No custom claims - check if user exists in MongoDB
-                const dbUser = await findUserByUid(firebaseToken.uid);
+                // User doesn't exist - create them! (auto-recovery)
+                try {
+                    const newUser = await createUser({
+                        uid: firebaseToken.uid,
+                        email: firebaseToken.email!,
+                    });
 
-                if (dbUser) {
-                    user = dbUser;
-                } else {
-                    // User doesn't exist - create them! (auto-recovery)
-                    try {
-                        const newUser = await createUser({
-                            uid: firebaseToken.uid,
-                            email: firebaseToken.email!,
-                            displayName: firebaseToken.name,
-                        });
+                    // Set custom claims for faster token verification in the future
+                    await setUserCustomClaims(newUser.uid, newUser._id!);
 
-                        // Set custom claims for future requests
-                        await setUserCustomClaims(newUser.uid, newUser._id!);
-
-                        user = newUser;
-                    } catch (error) {
-                        // Continue without user - let routes handle the error
+                    user = newUser;
+                } catch (error) {
+                    // Continue without user - let routes handle the error
+                    if (error instanceof Error) {
+                        logger.error('Failed to create user', error);
+                    } else {
+                        logger.error('Failed to create user', String(error));
                     }
                 }
             }
@@ -63,6 +59,5 @@ export async function createContext({ req }: CreateExpressContextOptions): Promi
         }
     }
 
-    const db = await getDb();
     return { user, db, firebaseToken };
-} 
+}

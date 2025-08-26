@@ -1,27 +1,29 @@
-import { User } from '@shared/user';
-import { getDb } from '../../db';
+import { User } from '@shared';
+import { getUserCollection } from '@/config/mongodb';
+import { ObjectId } from 'mongodb';
 
 export async function createUser(data: {
     uid: string;
     email: string;
-    displayName?: string;
 }): Promise<User> {
-    const db = await getDb();
+    const usersCollection = getUserCollection();
 
-    const newUser: Omit<User, '_id'> = {
+    const newUser = {
+        _id: new ObjectId(),
         uid: data.uid,
         email: data.email,
-        displayName: data.displayName || '',
-        role: 'user',
+        displayName: '',
+        role: 'user' as const,
         emailVerified: false,
+        onboardingCompleted: false,
         createdAt: new Date(),
         updatedAt: new Date(),
     };
 
-    const result = await db.collection<User>('users').insertOne(newUser as User);
+    await usersCollection.insertOne(newUser);
 
     return {
         ...newUser,
-        _id: result.insertedId.toString(),
+        _id: newUser._id.toString(),
     };
 } 

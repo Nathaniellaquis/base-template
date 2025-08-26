@@ -1,11 +1,11 @@
-import { createUserSchema } from '@shared/user';
+import { createUserSchema } from '@shared';
 import { TRPCError } from '@trpc/server';
 import {
     createUser as createUserInDb,
     findUserByUid,
     setUserCustomClaims
-} from '../../services/user';
-import { publicProcedure } from '../../trpc/trpc';
+} from '@/services/user';
+import { publicProcedure } from '@/trpc/trpc';
 
 export const createUser = publicProcedure
     .input(createUserSchema)
@@ -20,22 +20,16 @@ export const createUser = publicProcedure
         }
 
         // Check if user already exists
-        const existing = await findUserByUid(firebaseToken.uid);
-        if (existing) {
+        const existingUser = await findUserByUid(firebaseToken.uid);
+        if (existingUser) {
             // User already exists (might have been auto-created)
-            // Update display name if different
-            if (input.displayName && input.displayName !== existing.displayName) {
-                // For now, just return existing user
-                // Could add update logic here if needed
-            }
-            return existing;
+            return existingUser;
         }
 
         // Create the user (explicit creation via endpoint)
         const user = await createUserInDb({
             uid: firebaseToken.uid,
             email: firebaseToken.email!,
-            displayName: input.displayName,
         });
 
         // Set custom claims with MongoDB ID

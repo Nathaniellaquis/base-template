@@ -36,6 +36,7 @@ export default {
     "platforms": ["ios", "android", "web"],
     "plugins": [
       "expo-router",
+      "expo-localization",
       [
         "expo-splash-screen",
         {
@@ -43,6 +44,14 @@ export default {
           "imageWidth": 200,
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"
+        }
+      ],
+      [
+        "@stripe/stripe-react-native",
+        {
+          "merchantIdentifier": "merchant.com.ingrd",
+          "enableApplePay": true,
+          "enableGooglePay": true
         }
       ]
     ],

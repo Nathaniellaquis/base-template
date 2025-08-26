@@ -1,4 +1,4 @@
-import { router } from '../../trpc/trpc';
+import { router } from '@/trpc/trpc';
 import { createUser } from './create-user';
 import { getUser } from './get-user';
 import { updateUser } from './update-user';

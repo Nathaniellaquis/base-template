@@ -12,9 +12,43 @@
         "forceConsistentCasingInFileNames": true,
         "baseUrl": ".",
         "paths": {
-            "@shared/*": ["../types/*"]
+            "@/*": [
+                "./*"
+            ],
+            "@/routers/*": [
+                "./routers/*"
+            ],
+            "@/services/*": [
+                "./services/*"
+            ],
+            "@/trpc/*": [
+                "./trpc/*"
+            ],
+            "@/utils/*": [
+                "./utils/*"
+            ],
+            "@/webhooks/*": [
+                "./webhooks/*"
+            ],
+            "@/config": [
+                "./config/index"
+            ],
+            "@/db": [
+                "./config/mongodb/index"
+            ],
+            "@/firebase": [
+                "./config/firebase/index"
+            ],
+            "@shared": [
+                "../types/index"
+            ],
+            "@shared/*": [
+                "../types/*"
+            ]
         },
-        "allowSyntheticDefaultImports": true
+        "allowSyntheticDefaultImports": true,
+        "resolveJsonModule": true,
+        "moduleResolution": "node"
     },
     "include": [
         "**/*.ts",
@@ -25,6 +59,9 @@
         "dist"
     ],
     "ts-node": {
-        "esm": false
+        "esm": false,
+        "require": [
+            "tsconfig-paths/register"
+        ]
     }
 }

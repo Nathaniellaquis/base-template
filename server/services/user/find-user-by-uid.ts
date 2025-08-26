@@ -1,7 +1,13 @@
-import { User } from '@shared/user';
-import { getDb } from '../../db';
+import { getUserCollection } from '@/config/mongodb';
+import { mongoDocToUser } from '@/utils/database/mongodb';
 
-export async function findUserByUid(uid: string): Promise<User | null> {
-    const db = await getDb();
-    return db.collection<User>('users').findOne({ uid });
+export async function findUserByUid(uid: string) {
+    const usersCollection = getUserCollection();
+    const userDoc = await usersCollection.findOne({ uid });
+    
+    if (!userDoc) {
+        return null;
+    }
+    
+    return mongoDocToUser(userDoc);
 } 
