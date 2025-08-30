@@ -42,17 +42,20 @@ EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=123456789012
 EXPO_PUBLIC_FIREBASE_APP_ID=1:123456789012:web:abc123def456
 ```
 
-### Stripe Configuration (Frontend)
+### RevenueCat Configuration (Frontend)
 
 ```bash
-# Stripe Publishable Key
-# Get from: Stripe Dashboard > Developers > API keys
-EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_51Example...
+# RevenueCat iOS API Key
+# Get from: RevenueCat Dashboard > API Keys
+EXPO_PUBLIC_REVENUECAT_IOS_KEY=appl_example...
 
-# Stripe Merchant ID for Apple Pay
-# Required for Apple Pay on iOS
-# Format: merchant.com.yourdomain
-EXPO_PUBLIC_STRIPE_MERCHANT_ID=merchant.com.ingrd
+# RevenueCat Android API Key
+# Get from: RevenueCat Dashboard > API Keys
+EXPO_PUBLIC_REVENUECAT_ANDROID_KEY=goog_example...
+
+# RevenueCat Web API Key
+# Get from: RevenueCat Dashboard > API Keys
+EXPO_PUBLIC_REVENUECAT_WEB_KEY=rcweb_example...
 ```
 
 ### Analytics Configuration
@@ -116,31 +119,23 @@ FIREBASE_ADMIN_CREDENTIALS_BASE64=ewogICJ0eXBlIjogInNlcnZpY2VfYWNjb3VudCIs...
 # FIREBASE_ADMIN_CREDENTIALS='{"type":"service_account",...}'
 ```
 
-### Stripe Configuration (Backend)
+### RevenueCat Configuration (Backend)
 
 ```bash
-# Stripe Secret Key
-# Get from: Stripe Dashboard > Developers > API keys
-STRIPE_SECRET_KEY=sk_test_51Example...
+# RevenueCat Secret Key
+# Get from: RevenueCat Dashboard > API Keys > Secret Keys
+REVENUECAT_SECRET_KEY=sk_example...
 
-# Stripe Webhook Secret
-# Get from: Stripe Dashboard > Developers > Webhooks > Your endpoint
-STRIPE_WEBHOOK_SECRET=whsec_example_secret
+# RevenueCat Webhook Secret (optional but recommended)
+# Get from: RevenueCat Dashboard > Integrations > Webhooks
+REVENUECAT_WEBHOOK_SECRET=whsec_example_secret
 
-# Stripe Price IDs
-# Create products in: Stripe Dashboard > Products
-# Then copy the price IDs for each plan/period combination
-STRIPE_PRICE_BASIC_MONTHLY=price_1Example123
-STRIPE_PRICE_BASIC_YEARLY=price_1Example456
-STRIPE_PRICE_PRO_MONTHLY=price_1Example789
-STRIPE_PRICE_PRO_YEARLY=price_1Example012
-STRIPE_PRICE_ENTERPRISE_MONTHLY=price_1Example345
-STRIPE_PRICE_ENTERPRISE_YEARLY=price_1Example678
+# RevenueCat API Configuration
+REVENUECAT_API_URL=https://api.revenuecat.com/v1
+REVENUECAT_TIMEOUT=10000
 
-# Stripe Portal Configuration (optional)
-STRIPE_PORTAL_RETURN_URL=https://app.yourdomain.com/settings
-STRIPE_SUCCESS_URL=https://app.yourdomain.com/payment/success
-STRIPE_CANCEL_URL=https://app.yourdomain.com/payment/cancel
+# Note: Product IDs and pricing are configured in RevenueCat Dashboard,
+# not in environment variables. RevenueCat handles all product management.
 ```
 
 ### Optional Backend Variables
@@ -221,45 +216,47 @@ MONGODB_URI=mongodb://localhost:27017/ingrd-dev
 4. Security > Network Access > Add IP address (0.0.0.0/0 for development)
 5. Databases > Connect > Get connection string
 
-### 4. Stripe Setup
+### 4. RevenueCat Setup
 
-#### Create Stripe Account
-1. Sign up at [stripe.com](https://stripe.com)
-2. Use test mode for development
+#### Create RevenueCat Account
+1. Sign up at [revenuecat.com](https://revenuecat.com)
+2. Create a new project for your app
 
 #### Get API Keys
-1. Dashboard > Developers > API keys
-2. Copy both publishable and secret keys
+1. Dashboard > API Keys
+2. Copy iOS, Android, and Web public keys
+3. Copy Secret key for backend
 
-#### Create Products and Prices
-1. Dashboard > Products > Add product
-2. Create three products:
+#### Create Products and Entitlements
+1. Dashboard > Products > Configure products
+2. Connect to App Store Connect and Google Play Console
+3. Create products with these identifiers:
    - **Basic Plan**
-     - Monthly: $9.99
-     - Yearly: $99.99 (save ~17%)
+     - Monthly: $4.99 (basic_monthly)
+     - Yearly: $49.99 (basic_yearly)
    - **Pro Plan**
-     - Monthly: $29.99
-     - Yearly: $299.99 (save ~17%)
+     - Monthly: $9.99 (pro_monthly)
+     - Yearly: $99.99 (pro_yearly)
    - **Enterprise Plan**
-     - Monthly: $99.99
-     - Yearly: $999.99 (save ~17%)
-3. Copy price IDs to environment variables
+     - Monthly: $19.99 (enterprise_monthly)
+     - Yearly: $199.99 (enterprise_yearly)
+4. Dashboard > Entitlements > Map products to entitlements
 
 #### Setup Webhook
-1. Dashboard > Developers > Webhooks
+1. Dashboard > Integrations > Webhooks
 2. Add endpoint:
-   - Development: `http://localhost:3001/webhooks/stripe`
-   - Production: `https://api.yourdomain.com/webhooks/stripe`
-3. Select events:
-   - `checkout.session.completed`
-   - `customer.subscription.created`
-   - `customer.subscription.updated`
-   - `customer.subscription.deleted`
-   - `invoice.payment_succeeded`
-   - `invoice.payment_failed`
-   - `payment_intent.succeeded`
-   - `payment_intent.payment_failed`
-4. Copy webhook signing secret
+   - Development: `http://localhost:3001/webhooks/revenuecat`
+   - Production: `https://api.yourdomain.com/webhooks/revenuecat`
+3. Select all events for comprehensive sync:
+   - `INITIAL_PURCHASE`
+   - `RENEWAL`
+   - `CANCELLATION`
+   - `PRODUCT_CHANGE`
+   - `BILLING_ISSUE`
+   - `TRIAL_STARTED`
+   - `TRIAL_CONVERTED`
+   - And others as needed
+4. Copy webhook signing secret (if provided)
 
 ### 5. PostHog Setup (Optional)
 
@@ -275,8 +272,8 @@ MONGODB_URI=mongodb://localhost:27017/ingrd-dev
 NODE_ENV=development
 EXPO_PUBLIC_API_URL=http://localhost:3001
 MONGODB_URI=mongodb://localhost:27017/ingrd-dev
-# Use test Stripe keys
-STRIPE_SECRET_KEY=sk_test_...
+# Use test RevenueCat keys
+REVENUECAT_SECRET_KEY=sk_test_...
 ```
 
 ### Staging
@@ -285,8 +282,8 @@ STRIPE_SECRET_KEY=sk_test_...
 NODE_ENV=production
 EXPO_PUBLIC_API_URL=https://api-staging.yourdomain.com
 MONGODB_URI=mongodb+srv://...staging-cluster...
-# Still use test Stripe keys
-STRIPE_SECRET_KEY=sk_test_...
+# Still use test RevenueCat keys
+REVENUECAT_SECRET_KEY=sk_test_...
 ```
 
 ### Production
@@ -295,9 +292,10 @@ STRIPE_SECRET_KEY=sk_test_...
 NODE_ENV=production
 EXPO_PUBLIC_API_URL=https://api.yourdomain.com
 MONGODB_URI=mongodb+srv://...production-cluster...
-# Use live Stripe keys
-STRIPE_SECRET_KEY=sk_live_...
-STRIPE_PUBLISHABLE_KEY=pk_live_...
+# Use live RevenueCat keys
+REVENUECAT_SECRET_KEY=sk_live_...
+EXPO_PUBLIC_REVENUECAT_IOS_KEY=appl_live_...
+EXPO_PUBLIC_REVENUECAT_ANDROID_KEY=goog_live_...
 ```
 
 ## Security Best Practices
@@ -307,7 +305,7 @@ STRIPE_PUBLISHABLE_KEY=pk_live_...
 - Store production secrets in secure services (AWS Secrets Manager, etc.)
 - Rotate keys regularly
 - Use different Firebase projects for dev/staging/prod
-- Use Stripe test mode for non-production environments
+- Use RevenueCat sandbox mode for non-production environments
 - Use strong, unique passwords for database users
 - Limit database user permissions to minimum required
 
@@ -387,8 +385,8 @@ requiredVars.forEach(key => {
 - For Atlas, check IP whitelist and user credentials
 - Test connection: `mongosh "$MONGODB_URI"`
 
-#### "Stripe webhook signature verification failed"
-- Ensure webhook secret matches dashboard
+#### "RevenueCat webhook signature verification failed"
+- Ensure webhook secret matches dashboard (if configured)
 - Check you're using raw body (not parsed JSON)
 - Verify endpoint URL is exactly correct
 - Check for trailing slashes in URLs
@@ -412,12 +410,9 @@ mongosh "$MONGODB_URI" --eval "db.adminCommand('ping')"
 # Test Firebase auth
 node -e "const admin = require('firebase-admin'); admin.initializeApp(); console.log('Firebase OK');"
 
-# Test Stripe connection
-curl https://api.stripe.com/v1/charges \
-  -u "$STRIPE_SECRET_KEY:" \
-  -d amount=100 \
-  -d currency=usd \
-  -d source=tok_visa
+# Test RevenueCat connection
+curl https://api.revenuecat.com/v1/subscribers/test-user \
+  -H "Authorization: Bearer $REVENUECAT_SECRET_KEY"
 
 # Check port availability
 lsof -i :3001
@@ -492,10 +487,9 @@ eas secret:create --name EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY --value "pk_live_...
 - [ ] `NODE_ENV=production`
 - [ ] Production MongoDB URI
 - [ ] Production API URL
-- [ ] Live Stripe keys
-- [ ] `STRIPE_WEBHOOK_SECRET`
-- [ ] All Stripe price IDs
-- [ ] `EXPO_PUBLIC_STRIPE_MERCHANT_ID` (for Apple Pay)
+- [ ] Live RevenueCat keys
+- [ ] `REVENUECAT_WEBHOOK_SECRET` (if using webhooks)
+- [ ] All RevenueCat products configured in dashboard
 
 ### Optional but Recommended
 - [ ] `EXPO_PUBLIC_POSTHOG_API_KEY`

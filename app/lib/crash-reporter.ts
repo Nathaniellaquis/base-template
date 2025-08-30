@@ -40,7 +40,6 @@ class CrashReporter {
     // Set up global error handlers
     if (!__DEV__) {
       // In production, catch unhandled promise rejections
-      const originalHandler = global.onunhandledrejection;
       global.onunhandledrejection = (event: any) => {
         this.captureException(
           new Error(`Unhandled Promise Rejection: ${event.reason}`),
@@ -49,9 +48,6 @@ class CrashReporter {
             errorInfo: { reason: event.reason },
           }
         );
-        if (originalHandler) {
-          originalHandler(event);
-        }
       };
     }
 
@@ -148,14 +144,14 @@ const crashReporterInstance = new CrashReporter();
 export const initializeCrashReporter = () => crashReporterInstance.initialize();
 
 export const crashReporter = {
-  captureException: (error: Error, context?: CrashReporterContext) => 
+  captureException: (error: Error, context?: CrashReporterContext) =>
     crashReporterInstance.captureException(error, context),
-  captureMessage: (message: string, level?: 'info' | 'warning' | 'error') => 
+  captureMessage: (message: string, level?: 'info' | 'warning' | 'error') =>
     crashReporterInstance.captureMessage(message, level),
-  setUser: (user: { id: string; email?: string } | null) => 
+  setUser: (user: { id: string; email?: string } | null) =>
     crashReporterInstance.setUser(user),
-  setContext: (key: string, value: any) => 
+  setContext: (key: string, value: any) =>
     crashReporterInstance.setContext(key, value),
-  addBreadcrumb: (breadcrumb: Breadcrumb) => 
+  addBreadcrumb: (breadcrumb: Breadcrumb) =>
     crashReporterInstance.addBreadcrumb(breadcrumb),
 };

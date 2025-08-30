@@ -19,10 +19,10 @@ lib/
 ├── notifications/            # Notification services
 │   ├── index.ts             # Notification exports
 │   └── toast.ts             # Toast notification wrapper
-├── stripe/                   # Payment processing
-│   ├── stripe.ts            # Main Stripe entry
-│   ├── stripe.native.ts     # Native Stripe SDK
-│   └── stripe.web.ts        # Web Stripe SDK
+├── revenuecat/               # Payment processing
+│   ├── revenuecat.ts        # Main RevenueCat entry
+│   ├── revenuecat.native.ts # Native RevenueCat SDK
+│   └── revenuecat.web.ts    # Web RevenueCat SDK
 ├── analytics/                # Analytics & tracking
 │   ├── index.ts             # Analytics exports
 │   ├── events.ts            # Event definitions
@@ -34,7 +34,7 @@ lib/
 ```
 
 **Characteristics:**
-- External SDK integrations (Stripe, Firebase, PostHog)
+- External SDK integrations (RevenueCat, Firebase, PostHog)
 - API client configurations
 - Stateful logic and React hooks
 - Platform-specific implementations (.web.ts, .native.ts)
@@ -173,7 +173,7 @@ This ensures uniform organization where:
 | Email validator | `/utils/` | Pure function, no dependencies |
 | Date formatter | `/utils/` | Simple transformation |
 | Firebase auth wrapper | `/lib/auth/` | External service integration |
-| Stripe payment handler | `/lib/stripe/` | External SDK |
+| RevenueCat payment handler | `/lib/revenuecat/` | External SDK |
 | PostHog tracking | `/lib/analytics/` | External service, side effects |
 | Toast notifications | `/lib/notifications/` | External library wrapper |
 | String capitalizer | `/utils/` | Pure transformation |

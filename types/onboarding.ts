@@ -1,8 +1,9 @@
 import { ObjectId } from 'mongodb';
 import { z } from 'zod';
 
-// Onboarding configuration constants
-export const TOTAL_ONBOARDING_STEPS = 4; // Welcome + Profile Setup + Value Recap + Plan Selection
+// NOTE: The total onboarding steps is dynamic based on feature flags
+// Server: Use getTotalOnboardingSteps() from @/services/onboarding/config
+// Client: Use TOTAL_ONBOARDING_STEPS from @/config/onboarding-steps
 
 export interface OnboardingDocument {
   _id?: ObjectId;

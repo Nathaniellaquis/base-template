@@ -8,12 +8,12 @@ import { EmptyState, LoadingScreen } from '@/components/common';
 import { Ionicons } from '@expo/vector-icons';
 import { trpc } from '@/lib';
 import { formatRelativeTime } from '@/utils/formatters';
-import type { Notification } from '@shared/types/notification';
+import type { Notification } from '@shared';
 
 export function NotificationsList() {
   const styles = useThemedStyles(createNotificationsListStyles);
   const { theme } = useTheme();
-  const utils = trpc.useUtils();
+  const utils = trpc.useContext();
   const { data, isLoading, refetch, isRefetching } = trpc.notifications.getNotifications.useQuery(
     {},
     {
@@ -22,13 +22,13 @@ export function NotificationsList() {
     }
   );
   const markAsRead = trpc.notifications.markAsRead.useMutation({
-    onSuccess: (updatedNotification) => {
+    onSuccess: (updatedNotification: Notification) => {
       // Update cache directly with the returned notification
       utils.notifications.getNotifications.setData(
         {},
-        (old) => old ? {
+        (old: any) => old ? {
           ...old,
-          notifications: old.notifications.map(n => 
+          notifications: old.notifications.map((n: Notification) => 
             n._id === updatedNotification._id ? updatedNotification : n
           )
         } : old

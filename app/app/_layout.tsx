@@ -7,9 +7,8 @@ import { SafeAreaProvider, initialWindowMetrics } from 'react-native-safe-area-c
 import { AuthProvider, useAuth } from '@/providers/auth';
 import { TRPCProvider } from '@/providers/trpc';
 import { ThemeProvider } from '@/providers/theme';
+import { WorkspaceProvider } from '@/providers/workspace';
 import { OnboardingProvider } from '@/providers/onboarding';
-import { PaymentProvider } from '@/providers/payment';
-import { PaymentErrorBoundary } from '@/components/features/payment/PaymentErrorBoundary';
 import { AdminProvider } from '@/providers/admin';
 import { AnalyticsProvider, useAnalytics } from '@/providers/analytics';
 import { SplashScreen, ErrorBoundary, GlobalErrorFallback, NetworkErrorScreen } from '@/components/common';
@@ -130,18 +129,16 @@ export default function RootLayout() {
           <ThemeProvider>
             <TRPCProvider>
               <AuthProvider>
-                <AnalyticsProvider>
-                  <PaymentErrorBoundary>
-                    <PaymentProvider>
-                      <OnboardingProvider>
+                <WorkspaceProvider>
+                  <AnalyticsProvider>
+                    <OnboardingProvider>
                       <AdminProvider>
                         <App />
                         <StatusBar style="auto" />
                       </AdminProvider>
-                      </OnboardingProvider>
-                    </PaymentProvider>
-                  </PaymentErrorBoundary>
-                </AnalyticsProvider>
+                    </OnboardingProvider>
+                  </AnalyticsProvider>
+                </WorkspaceProvider>
               </AuthProvider>
             </TRPCProvider>
           </ThemeProvider>

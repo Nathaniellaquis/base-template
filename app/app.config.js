@@ -45,14 +45,6 @@ export default {
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"
         }
-      ],
-      [
-        "@stripe/stripe-react-native",
-        {
-          "merchantIdentifier": "merchant.com.ingrd",
-          "enableApplePay": true,
-          "enableGooglePay": true
-        }
       ]
     ],
     "experiments": {

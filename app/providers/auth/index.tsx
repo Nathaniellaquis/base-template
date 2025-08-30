@@ -73,7 +73,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
             // Update crash reporter
             crashReporter.setUser({
-                id: userProfile._id,
+                id: userProfile._id || '',
                 email: userProfile.email
             });
         } catch (error: any) {
@@ -152,7 +152,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 
                 // Update crash reporter
                 crashReporter.setUser({
-                    id: params.user._id,
+                    id: params.user._id || '',
                     email: params.user.email
                 });
                 return;
@@ -177,7 +177,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             // Update crash reporter
             if (params.user && params.user._id) {
                 crashReporter.setUser({
-                    id: params.user._id,
+                    id: params.user._id || '',
                     email: params.user.email
                 });
             } else {
@@ -327,7 +327,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 // Update crash reporter
                 if (userProfile && userProfile._id) {
                     crashReporter.setUser({
-                        id: userProfile._id,
+                        id: userProfile._id || '',
                         email: userProfile.email
                     });
                 }

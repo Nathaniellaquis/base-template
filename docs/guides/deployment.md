@@ -13,7 +13,7 @@ This guide covers deploying INGRD to production using Expo Application Services 
 - Cloud hosting account (Vercel, Railway, AWS, etc.) - For backend
 - Production MongoDB (Atlas recommended)
 - Production Firebase project
-- Production Stripe account
+- Production RevenueCat account
 
 ### Required Tools
 ```bash
@@ -44,11 +44,10 @@ MONGODB_URI=mongodb+srv://prod-user:password@cluster.mongodb.net/ingrd-prod
 FIREBASE_PROJECT_ID=ingrd-production
 FIREBASE_ADMIN_CREDENTIALS_BASE64=<base64-encoded-service-account>
 
-# Production Stripe (LIVE keys)
-STRIPE_SECRET_KEY=sk_live_...
-STRIPE_WEBHOOK_SECRET=whsec_live_...
-STRIPE_PRICE_BASIC_MONTHLY=price_live_basic_monthly
-# ... other live price IDs
+# Production RevenueCat (LIVE keys)
+REVENUECAT_SECRET_KEY=sk_live_...
+REVENUECAT_WEBHOOK_SECRET=whsec_live_...
+# RevenueCat handles product IDs via dashboard
 
 # Optional production settings
 LOG_LEVEL=error
@@ -169,13 +168,13 @@ docker push 123456789.dkr.ecr.us-east-1.amazonaws.com/ingrd-backend:latest
 
 3. Deploy using ECS task definition with environment variables
 
-### 3. Configure Stripe Webhooks
+### 3. Configure RevenueCat Webhooks
 
 After deployment, set up production webhook:
-1. Go to Stripe Dashboard > Developers > Webhooks
-2. Add endpoint: `https://api.yourdomain.com/webhooks/stripe`
-3. Select events (same as development)
-4. Copy signing secret to `STRIPE_WEBHOOK_SECRET` env var
+1. Go to RevenueCat Dashboard > Integrations > Webhooks
+2. Add endpoint: `https://api.yourdomain.com/webhooks/revenuecat`
+3. Select all events for comprehensive sync
+4. Copy signing secret to `REVENUECAT_WEBHOOK_SECRET` env var
 5. Redeploy with updated secret
 
 ### 4. Verify Backend Deployment
@@ -351,7 +350,7 @@ Update `app.json` for production:
     },
     "plugins": [
       "expo-router",
-      "@stripe/stripe-react-native",
+      "react-native-purchases",
       [
         "expo-notifications",
         {
@@ -425,7 +424,7 @@ eas submit --platform android --track=internal
 - [ ] All environment variables set correctly
 - [ ] Production Firebase project configured
 - [ ] Production MongoDB database created
-- [ ] Stripe live mode activated and configured
+- [ ] RevenueCat production mode activated and configured
 - [ ] SSL certificates configured
 - [ ] Domain names pointed to servers
 - [ ] Error tracking configured (Sentry/etc)
@@ -579,11 +578,11 @@ aws ecs update-service --service ingrd-backend --task-definition ingrd-backend:p
 - Clear cache: `eas build --clear-cache`
 - Check native dependencies
 
-#### "Stripe Webhooks Failing"
+#### "RevenueCat Webhooks Failing"
 - Verify webhook secret matches
 - Check endpoint URL (no trailing slash)
 - Ensure raw body parsing
-- Check Stripe dashboard for errors
+- Check RevenueCat dashboard for errors
 
 #### "Push Notifications Not Working"
 - Verify FCM/APNs credentials

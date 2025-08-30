@@ -8,9 +8,17 @@
   "scripts": {
     "dev:ios": "npm run dev:ios --workspace=app",
     "dev:backend": "npm run dev:backend --workspace=server",
-    "dev": "osascript -e 'tell application \"Terminal\" to activate' && osascript -e 'tell app \"Terminal\" to do script \"cd '\"$(pwd)\"' && npm run dev:backend\"' && osascript -e 'tell app \"Terminal\" to do script \"cd '\"$(pwd)\"' && npm run dev:ios\"'"
+    "dev": "osascript -e 'tell application \"Terminal\" to activate' && osascript -e 'tell app \"Terminal\" to do script \"cd '\"$(pwd)\"' && npm run dev:backend\"' && osascript -e 'tell app \"Terminal\" to do script \"cd '\"$(pwd)\"' && npm run dev:ios\"'",
+    "android": "expo run:android",
+    "ios": "expo run:ios"
   },
   "devDependencies": {
     "concurrently": "^8.2.2"
+  },
+  "version": "1.0.0",
+  "dependencies": {
+    "expo": "~53.0.22",
+    "react": "19.0.0",
+    "react-native": "0.79.6"
   }
 }

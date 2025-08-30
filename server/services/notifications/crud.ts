@@ -5,6 +5,7 @@
 
 import { ObjectId } from 'mongodb';
 import { getNotificationsCollection, getUserCollection } from '@/config/mongodb';
+import { config } from '@/config';
 import { toObjectIdOrThrow } from '@/utils/database/mongodb';
 import { createLogger } from '@/utils/logging/logger';
 import type { Notification, NotificationDocument, NotificationCategory } from '@shared';

@@ -18,13 +18,14 @@ export interface AppConfig {
     messagingSenderId: string;
     appId: string;
   };
-  stripe: {
-    publishableKey: string;
-    merchantId: string;
-  };
   posthog: {
     apiKey: string;
     host: string;
+  };
+  revenuecat: {
+    iosKey: string;
+    androidKey: string;
+    webKey: string;
   };
   environment: {
     isDevelopment: boolean;
@@ -62,13 +63,14 @@ export const config: AppConfig = {
     messagingSenderId: validateEnv('EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID'),
     appId: validateEnv('EXPO_PUBLIC_FIREBASE_APP_ID'),
   },
-  stripe: {
-    publishableKey: validateEnv('EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY'),
-    merchantId: validateEnv('EXPO_PUBLIC_STRIPE_MERCHANT_ID'),
-  },
   posthog: {
     apiKey: validateEnv('EXPO_PUBLIC_POSTHOG_API_KEY'),
     host: validateEnv('EXPO_PUBLIC_POSTHOG_HOST', 'https://app.posthog.com'),
+  },
+  revenuecat: {
+    iosKey: validateEnv('EXPO_PUBLIC_REVENUECAT_IOS_KEY', ''),
+    androidKey: validateEnv('EXPO_PUBLIC_REVENUECAT_ANDROID_KEY', ''),
+    webKey: validateEnv('EXPO_PUBLIC_REVENUECAT_WEB_KEY', ''),
   },
   environment: {
     isDevelopment: __DEV__,
@@ -77,29 +79,42 @@ export const config: AppConfig = {
   },
 };
 
-// Legacy API configuration for backward compatibility
-export const apiConfig = {
-  baseUrl: config.api.url,
-};
 
 // ============================================
 // Re-export remaining items from submodules
 // ============================================
 
 // Firebase exports
-export { 
-  isWeb, 
+export {
+  isWeb,
   validateFirebaseConfig,
   type FirebaseOptions,
   type User,
   type UserCredential
 } from './firebase';
 
-// Stripe exports
+// RevenueCat exports
 export {
-  validateStripeConfig,
-  type StripeConfig
-} from './stripe';
+    // Validation
+    validateRevenueCatConfig,
+    
+    // Configuration & Constants
+    REVENUECAT_CONFIG,
+    PRODUCT_IDS,
+    PLAN_FEATURES,
+    TRIAL_CONFIG,
+    
+    // Helper Functions
+    getRevenueCatApiKey,
+    entitlementToPlan,
+    planToEntitlement,
+    getHighestEntitlement,
+    getPackageIdentifier,
+    
+    // Types
+    type PurchaseResult,
+    type SubscriptionInfo,
+} from './revenuecat';
 
 // ============================================
 // App-specific configuration (not from environment)
@@ -107,13 +122,14 @@ export {
 export const APP_CONFIG = {
   // App version
   version: '1.0.0',
-  
+
   // Feature flags
   features: {
     enableNotifications: true,
     enablePayments: true,
+    enableWorkspaces: true, // Hardcoded - change this to enable/disable workspaces
   },
-  
+
   // Other app-wide configuration
   defaults: {
     currency: 'USD',
@@ -126,7 +142,6 @@ export const APP_CONFIG = {
 // ============================================
 import { createFirebaseServices } from './firebase';
 import { createPostHog } from './posthog/posthog';
-import { createStripeConfig, createPaymentSheetConfig } from './stripe';
 
 // ============================================
 // Initialize services using factory functions
@@ -141,26 +156,4 @@ export const firebaseConfig = config.firebase;
 
 // Initialize PostHog
 export const posthog = createPostHog(config.posthog.apiKey, config.posthog.host);
-
-// Initialize Stripe configuration
-export const stripeConfig = createStripeConfig({
-  publishableKey: config.stripe.publishableKey,
-  merchantId: config.stripe.merchantId,
-  isDevelopment: config.environment.isDevelopment,
-});
-
-export const paymentSheetConfig = createPaymentSheetConfig(
-  stripeConfig,
-  config.environment.isDevelopment
-);
-
-// Platform-specific Stripe promise for web
-let stripePromise: Promise<any> | undefined;
-if (typeof window !== 'undefined') {
-  // Dynamically import for web platform only
-  import('./stripe/stripe.web').then(({ createStripePromise }) => {
-    stripePromise = createStripePromise(config.stripe.publishableKey);
-  });
-}
-export { stripePromise };
 

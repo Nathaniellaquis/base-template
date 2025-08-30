@@ -194,4 +194,23 @@ export const createStyles = (theme: Theme) => ({
     marginBottom: theme.spacing.lg,
     textAlign: 'center' as const,
   },
+  webPurchaseButton: {
+    backgroundColor: theme.colors.primary,
+    paddingVertical: theme.spacing.md,
+    paddingHorizontal: theme.spacing.xl,
+    borderRadius: theme.borderRadius.md,
+    alignItems: 'center' as const,
+    marginTop: theme.spacing.lg,
+  },
+  webPurchaseButtonText: {
+    color: '#FFFFFF',
+    fontSize: theme.typography.fontSize.base,
+    fontWeight: theme.typography.fontWeight.semibold,
+  },
+  webSecureText: {
+    fontSize: theme.typography.fontSize.sm,
+    color: theme.colors.textSecondary,
+    textAlign: 'center' as const,
+    marginTop: theme.spacing.sm,
+  },
 });

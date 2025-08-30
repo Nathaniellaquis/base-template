@@ -209,13 +209,13 @@ export default function ExperimentDetails() {
   const { id } = useLocalSearchParams<{ id: string }>();
   
   // Get experiment details
-  const { data: experiment, refetch } = trpc.experiments.getExperiment.useQuery({
+  const { data: experiment, refetch } = trpc.experiment.getExperiment.useQuery({
     experimentId: id,
   }) as { data: (ExperimentConfig & { _id: string; metrics?: ExperimentMetrics[] }) | undefined; refetch: () => void };
   
   // Update experiment mutation
-  // const updateExperiment = trpc.experiments.updateExperiment.useMutation();
-  const toggleStatus = trpc.experiments.updateExperimentStatus.useMutation();
+  // const updateExperiment = trpc.experiment.updateExperiment.useMutation();
+  const toggleStatus = trpc.experiment.updateExperimentStatus.useMutation();
   
   useEffect(() => {
     if (toggleStatus.isSuccess) {

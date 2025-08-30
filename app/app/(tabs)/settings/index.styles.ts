@@ -76,4 +76,15 @@ export const createSettingsStyles = (theme: Theme) => ({
   saveButton: {
     marginLeft: theme.spacing.sm,
   },
+  sectionHeader: {
+    padding: theme.spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.divider,
+  },
+  cardContent: {
+    padding: theme.spacing.md,
+  },
+  subscriptionInfo: {
+    alignItems: 'flex-start' as const,
+  },
 });

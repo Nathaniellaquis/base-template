@@ -13,6 +13,8 @@ export interface MongoDBConfig {
     onboarding: string;
     notifications: string;
     experiments: string;
+    workspaces: string;
+    workspace_invites: string;
   };
   options: {
     maxPoolSize: number;
@@ -30,6 +32,8 @@ export const mongodbConfig: MongoDBConfig = {
     onboarding: 'onboarding',
     notifications: 'notifications',
     experiments: 'experiments',
+    workspaces: 'workspaces',
+    workspace_invites: 'workspace_invites',
   },
   options: {
     maxPoolSize: 10,
@@ -51,7 +55,7 @@ export const indexDefinitions: Record<string, Array<{
   users: [
     { key: { uid: 1 }, options: { unique: true } },
     { key: { email: 1 }, options: {} },
-    { key: { stripeCustomerId: 1 }, options: {} },
+
     { key: { role: 1 }, options: {} },
     { key: { createdAt: -1 }, options: {} },
     { key: { role: 1, createdAt: -1 }, options: {} },
@@ -71,5 +75,18 @@ export const indexDefinitions: Record<string, Array<{
     { key: { isActive: 1 }, options: {} },
     { key: { createdAt: -1 }, options: {} },
     { key: { isActive: 1, createdAt: -1 }, options: {} },
+  ],
+  workspace_invites: [
+    { key: { code: 1 }, options: { unique: true } },
+    { key: { workspaceId: 1 }, options: {} },
+    { key: { active: 1, expiresAt: 1 }, options: {} },
+    { key: { createdAt: -1 }, options: {} },
+  ],
+  workspaces: [
+    { key: { 'members.userId': 1 }, options: {} },
+    { key: { ownerId: 1 }, options: {} },
+    { key: { 'members.userId': 1, _id: 1 }, options: {} },
+    { key: { createdAt: -1 }, options: {} },
+    { key: { name: 1 }, options: {} },
   ],
 };

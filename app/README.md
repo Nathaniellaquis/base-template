@@ -73,6 +73,7 @@ npm run build:server # Compile TypeScript server
 
 # Quality
 npm run lint         # Run ESLint
+npm run type-check   # Run TypeScript checks
 ```
 
 ## 🔧 Configuration
@@ -98,6 +99,15 @@ EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN=your-auth-domain
 3. Add your app's config to `.env`
 4. Download service account key for server
 
+### Feature Flags
+
+Control optional features through environment variables:
+
+```env
+# Enable workspace functionality
+ENABLE_WORKSPACES=true
+```
+
 ## 🛠️ Key Improvements Made
 
 - ✅ Consolidated user types into single `User` interface
@@ -107,6 +117,9 @@ EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN=your-auth-domain
 - ✅ Removed empty directories and redundant files
 - ✅ Environment-based Firebase configuration
 - ✅ Unified naming throughout the project
+- ✅ TypeScript compilation is now clean for all app code
+- ✅ Workspace feature can be toggled with `ENABLE_WORKSPACES` flag
+- ✅ Improved tRPC router structure with better type safety
 
 ## 📚 Usage Examples
 
@@ -135,6 +148,15 @@ const { isMobile, isDesktop } = useBreakpoints();
 - **Web**: Deploy to Vercel/Netlify with `npm run build:web`
 - **Mobile**: Use EAS Build for app stores
 - **Server**: Deploy to Railway/Render/AWS
+
+---
+
+## 📚 Documentation
+
+- [Development Guide](./docs/guides/development.md) - TypeScript best practices and common patterns
+- [Workspace Feature](./docs/features/workspaces.md) - Optional workspace functionality
+- [Types Architecture](./docs/architecture/types.md) - tRPC patterns and type safety
+- [Stripe Integration](./docs/backend/STRIPE_ARCHITECTURE.md) - Payment system architecture
 
 ---
 

@@ -18,26 +18,22 @@ const envSchema = Joi.object({
     // Server
     PORT: Joi.number().default(3000),
     NODE_ENV: Joi.string().valid('development', 'production', 'test').default('development'),
-    
+
     // Database
     MONGODB_URI: Joi.string().required(),
-    
+
     // Firebase
     FIREBASE_PROJECT_ID: Joi.string().required(),
     FIREBASE_ADMIN_CREDENTIALS: Joi.string().required(),
-    
-    // Stripe
-    STRIPE_SECRET_KEY: Joi.string().required(),
-    STRIPE_WEBHOOK_SECRET: Joi.string().required(),
-    STRIPE_PRICE_BASIC_MONTHLY: Joi.string().required(),
-    STRIPE_PRICE_BASIC_YEARLY: Joi.string().required(),
-    STRIPE_PRICE_PRO_MONTHLY: Joi.string().required(),
-    STRIPE_PRICE_PRO_YEARLY: Joi.string().required(),
-    STRIPE_PRICE_ENTERPRISE_MONTHLY: Joi.string().required(),
-    STRIPE_PRICE_ENTERPRISE_YEARLY: Joi.string().required(),
-    STRIPE_PORTAL_RETURN_URL: Joi.string().default('http://localhost:3000/settings'),
-    STRIPE_SUCCESS_URL: Joi.string().default('http://localhost:3000/payment/success'),
-    STRIPE_CANCEL_URL: Joi.string().default('http://localhost:3000/payment/cancel'),
+
+    // RevenueCat
+    REVENUECAT_SECRET_KEY: Joi.string().required(),
+    REVENUECAT_WEBHOOK_SECRET: Joi.string().optional().allow(''),
+    REVENUECAT_API_URL: Joi.string().default('https://api.revenuecat.com/v1'),
+    REVENUECAT_TIMEOUT: Joi.string().default('30000'),
+
+    // Optional features
+    ENABLE_WORKSPACES: Joi.boolean().default(false), // Not used anymore - see hardcoded value below
 }).unknown();
 
 // Validate environment variables
@@ -60,6 +56,7 @@ interface Config {
     isDevelopment: boolean;
     isProduction: boolean;
     isTest: boolean;
+    enableWorkspaces: boolean;
     mongodb: {
         uri: string;
         dbName: string;
@@ -71,28 +68,11 @@ interface Config {
         projectId: string;
         adminCredentialsJson: string;
     };
-    stripe: {
+    revenuecat: {
         secretKey: string;
-        webhookSecret: string;
-        prices: {
-            basic: {
-                monthly: string;
-                yearly: string;
-            };
-            pro: {
-                monthly: string;
-                yearly: string;
-            };
-            enterprise: {
-                monthly: string;
-                yearly: string;
-            };
-        };
-        urls: {
-            portalReturn: string;
-            success: string;
-            cancel: string;
-        };
+        webhookSecret?: string;
+        apiUrl: string;
+        timeout: number;
     };
 }
 
@@ -103,6 +83,7 @@ export const config: Config = {
     isDevelopment: envVars.NODE_ENV === 'development',
     isProduction: envVars.NODE_ENV === 'production',
     isTest: envVars.NODE_ENV === 'test',
+    enableWorkspaces: true, // Hardcoded - change this to enable/disable workspaces
     mongodb: {
         uri: envVars.MONGODB_URI,
         dbName: 'base-template',
@@ -114,28 +95,11 @@ export const config: Config = {
         projectId: envVars.FIREBASE_PROJECT_ID,
         adminCredentialsJson: envVars.FIREBASE_ADMIN_CREDENTIALS,
     },
-    stripe: {
-        secretKey: envVars.STRIPE_SECRET_KEY,
-        webhookSecret: envVars.STRIPE_WEBHOOK_SECRET,
-        prices: {
-            basic: {
-                monthly: envVars.STRIPE_PRICE_BASIC_MONTHLY,
-                yearly: envVars.STRIPE_PRICE_BASIC_YEARLY,
-            },
-            pro: {
-                monthly: envVars.STRIPE_PRICE_PRO_MONTHLY,
-                yearly: envVars.STRIPE_PRICE_PRO_YEARLY,
-            },
-            enterprise: {
-                monthly: envVars.STRIPE_PRICE_ENTERPRISE_MONTHLY,
-                yearly: envVars.STRIPE_PRICE_ENTERPRISE_YEARLY,
-            },
-        },
-        urls: {
-            portalReturn: envVars.STRIPE_PORTAL_RETURN_URL,
-            success: envVars.STRIPE_SUCCESS_URL,
-            cancel: envVars.STRIPE_CANCEL_URL,
-        },
+    revenuecat: {
+        secretKey: envVars.REVENUECAT_SECRET_KEY,
+        webhookSecret: envVars.REVENUECAT_WEBHOOK_SECRET,
+        apiUrl: envVars.REVENUECAT_API_URL,
+        timeout: parseInt(envVars.REVENUECAT_TIMEOUT, 10),
     },
 };
 
@@ -145,5 +109,5 @@ export * from './firebase';
 // Export MongoDB configuration and services
 export * from './mongodb';
 
-// Export Stripe configuration
-export * from './stripe';
+// Export RevenueCat configuration
+export * from './revenuecat';

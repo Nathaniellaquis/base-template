@@ -6,10 +6,10 @@
  */
 
 // Provider hooks (exported from providers but accessible here for convenience)
-export { useAuth } from '@/providers/auth';
 export { useAdmin } from '@/providers/admin';
+export { useAuth } from '@/providers/auth';
 export { useTheme } from '@/providers/theme';
-export { usePayment } from '@/providers/payment';
+
 export { useAnalytics } from '@/providers/analytics';
 
 // Onboarding hooks
@@ -23,13 +23,14 @@ export { useTypedRouter } from './useTypedRouter';
 export { useNotifications } from './useNotifications';
 
 // Experiment hooks
-export { 
+export {
   useExperiment,
   useMultivariantExperiment
 } from './useExperiment';
 
-// Payment hooks
-export { usePaymentConfirmation } from './usePaymentConfirmation';
+
+// Payment hook
+export { usePayments } from './usePayments';
 
 // UI hooks
 export { useMediaQuery } from './useMediaQuery';

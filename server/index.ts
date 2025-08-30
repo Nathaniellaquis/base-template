@@ -6,10 +6,10 @@ import {
     performanceMiddleware,
     setupUnhandledRejectionTracking
 } from '@/middleware/error-tracking';
-import { handleStripeWebhook } from '@/webhooks/stripe';
 import { createTRPCMiddleware } from '@/trpc/app';
 import { analytics } from '@/utils/analytics';
 import { createLogger } from '@/utils/logging/logger';
+import revenueCatWebhookRouter from '@/webhooks/revenuecat';
 import cors from 'cors';
 import express from 'express';
 
@@ -28,8 +28,13 @@ app.use(cors());
 // Performance monitoring (only tracks slow requests)
 app.use(performanceMiddleware);
 
-// Stripe webhook needs raw body
-app.post('/webhook/stripe', express.raw({ type: 'application/json' }), handleStripeWebhook);
+// RevenueCat webhook needs JSON body but applied before express.json()
+app.use('/webhooks/revenuecat', express.json({
+    verify: (req, res, buf) => {
+        // Store raw body for signature verification
+        (req as any).rawBody = buf.toString('utf-8');
+    }
+}), revenueCatWebhookRouter);
 
 // JSON middleware for other routes
 app.use(express.json());

@@ -47,10 +47,12 @@
     "**/*.tsx",
     ".expo/types/**/*.ts",
     "expo-env.d.ts",
-    "nativewind-env.d.ts"
+    "nativewind-env.d.ts",
+    "../server/trpc/app.ts",
+    "../server/trpc/context.ts",
+    "../server/trpc/trpc.ts"
   ],
   "exclude": [
-    "../server/**/*",
     "node_modules"
   ]
 }

@@ -1,8 +1,9 @@
 import { protectedProcedure } from '@/trpc/trpc';
 import { getOnboardingCollection, getUserCollection } from '@/config/mongodb';
 import { ObjectId } from 'mongodb';
-import { OnboardingDocument, TOTAL_ONBOARDING_STEPS } from '@shared';
+import { OnboardingDocument } from '@shared';
 import { mongoDocToUser } from '@/utils/database/mongodb';
+import { getTotalOnboardingSteps } from '@/services/onboarding/config';
 
 export const getUser = protectedProcedure.query(async ({ ctx }) => {
     const { user } = ctx;
@@ -45,7 +46,7 @@ export const getUser = protectedProcedure.query(async ({ ctx }) => {
             ...freshUser,
             onboarding: {
                 currentStep: onboarding.currentStep,
-                totalSteps: TOTAL_ONBOARDING_STEPS,
+                totalSteps: getTotalOnboardingSteps(),
                 startedAt: onboarding.startedAt,
                 version: onboarding.version,
             },

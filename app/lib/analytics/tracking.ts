@@ -102,6 +102,58 @@ export const trackPaywall = {
     paywallTracker.trackPaywallDismissed(planViewed, reason);
   },
 
+  // Payment tracking methods for RevenueCat integration
+  paymentAttempt: (plan: string, period: 'monthly' | 'yearly', method?: string) => {
+    const analytics = analyticsInstance || (globalThis as any).analytics;
+    analytics?.capture?.('payment_attempt', {
+      plan,
+      period,
+      payment_method: method,
+      timestamp: new Date().toISOString()
+    });
+  },
+
+  paymentSuccess: (plan: string, period: 'monthly' | 'yearly', price?: number | string, method?: string) => {
+    const analytics = analyticsInstance || (globalThis as any).analytics;
+    analytics?.capture?.('payment_success', {
+      plan,
+      period,
+      price: typeof price === 'number' ? price : undefined,
+      payment_method: method,
+      timestamp: new Date().toISOString()
+    });
+  },
+
+  paymentError: (plan: string, period: 'monthly' | 'yearly', method?: string, error?: string) => {
+    const analytics = analyticsInstance || (globalThis as any).analytics;
+    analytics?.capture?.('payment_error', {
+      plan,
+      period,
+      payment_method: method,
+      error_message: error,
+      timestamp: new Date().toISOString()
+    });
+  },
+
+  paymentCanceled: (plan: string, period?: 'monthly' | 'yearly' | string, method?: string) => {
+    const analytics = analyticsInstance || (globalThis as any).analytics;
+    analytics?.capture?.('payment_canceled', {
+      plan,
+      period: typeof period === 'string' && (period === 'monthly' || period === 'yearly') ? period : undefined,
+      payment_method: method || period,
+      timestamp: new Date().toISOString()
+    });
+  },
+
+  purchasesRestored: (entitlements: string[]) => {
+    const analytics = analyticsInstance || (globalThis as any).analytics;
+    analytics?.capture?.('purchases_restored', {
+      entitlements,
+      count: entitlements.length,
+      timestamp: new Date().toISOString()
+    });
+  },
+
   featureGate: (feature: string, requiredPlan: string, currentPlan: string, location: string) => {
     paywallTracker.trackFeatureGate(feature, requiredPlan, currentPlan, location);
   },

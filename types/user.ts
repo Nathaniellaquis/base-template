@@ -1,3 +1,6 @@
+import type { Subscription } from './payment';
+import type { WorkspaceMember } from './workspace';
+
 /**
  * User type - simple and clean
  */
@@ -22,7 +25,7 @@ export interface User {
   };
   createdAt?: Date;
   updatedAt?: Date;
-  
+
   // Profile fields
   bio?: string;
   phoneNumber?: string;
@@ -37,7 +40,7 @@ export interface User {
   };
   profileCompleteness?: number; // 0-100 percentage
   lastProfileUpdate?: Date;
-  
+
   // Notification fields
   pushTokens?: {
     token: string;
@@ -45,27 +48,29 @@ export interface User {
     platform: 'ios' | 'android';
     updatedAt: Date;
   }[];
-  
+
   notificationPreferences?: {
     enabled: boolean;
     updates: boolean;
     reminders: boolean;
     social: boolean;
   };
-  
-  // Stripe fields
-  stripeCustomerId?: string;
-  subscription?: {
-    id: string;
-    status: 'active' | 'canceled' | 'past_due' | 'trialing' | 'incomplete' | 'incomplete_expired' | 'unpaid' | 'paused';
-    plan: 'free' | 'basic' | 'pro' | 'enterprise';
-    period: 'monthly' | 'yearly';
-    currentPeriodEnd: Date;
-    cancelAtPeriodEnd: boolean;
-    priceId: string;
-    productId: string;
-    lastSyncedAt: Date;
-  };
+
+  // Workspace fields (only populated when workspaces enabled)
+  currentWorkspaceId?: string;
+  workspaces?: Array<{
+    workspaceId: string;
+    role: WorkspaceMember['role'];
+    joinedAt: Date;
+  }>;
+
+
+  subscription?: Subscription;
+
+  // RevenueCat fields
+  revenueCatId?: string;  // RevenueCat app user ID
+  revenueCatOriginalAppUserId?: string;  // Original app user ID
+  lastSyncedAt?: Date;  // Last sync with RevenueCat API
 }
 
 /**

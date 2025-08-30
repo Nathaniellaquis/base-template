@@ -38,7 +38,7 @@ export function toObjectIdOrNull() // Convert or return null
 ### 3. Environment Variables Isolation
 
 **Before**: `PRICE_IDS` in shared types with `process.env`  
-**After**: Moved to `/server/config/stripe.ts`
+**After**: Product IDs configured in RevenueCat Dashboard
 
 **Impact**:
 - Shared types remain environment-agnostic

@@ -136,7 +136,7 @@ export default function RootLayout() {
 │   └── migrations/    # Database migrations
 ├── integrations/      # Third-party integrations
 │   ├── firebase/
-│   ├── stripe/
+│   ├── revenuecat/
 │   └── posthog/
 └── utils/             # Utilities
     ├── logger/

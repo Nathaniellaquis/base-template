@@ -17,3 +17,8 @@ export * from './experiments';
 
 // Admin types
 export * from './admin';
+
+// Workspace types - conditionally exported
+// When workspaces are disabled, these types won't be used
+// but TypeScript will still validate them for consistency
+export * from './workspace';

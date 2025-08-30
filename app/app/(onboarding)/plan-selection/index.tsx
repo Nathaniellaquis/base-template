@@ -1,13 +1,11 @@
 import { ResponsiveModal } from '@/components/common/Modal';
 import { OnboardingLayout } from '@/components/features';
-import { PaymentSelection } from '@/components/features/payment/PaymentSelection';
-import { PlanSelectionPayment } from '@/components/features/payment/PlanSelectionPayment';
 import { Text } from '@/components/ui';
-import { useNativePayment } from '@/hooks/useNativePayment';
 import { useOnboarding } from '@/hooks/useOnboarding';
 import { useOnboardingNavigation } from '@/hooks/useOnboardingNavigation';
+import { usePayments } from '@/hooks/usePayments';
 import { trackPaywall } from '@/lib/analytics/tracking';
-import { usePayment } from '@/providers/payment';
+import { useAuth } from '@/providers/auth';
 import { useThemedStyles } from '@/styles';
 import { Ionicons } from '@expo/vector-icons';
 import type { BillingPeriod, PlanType } from '@shared/payment';
@@ -26,15 +24,24 @@ import { createStyles } from './index.styles';
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 export default function PlanSelection() {
-  const { isSubscriptionLoading, plan: currentPlan } = usePayment();
+  const { user } = useAuth();
   const { completeAndNavigate } = useOnboardingNavigation();
   const { currentStep } = useOnboarding();
+  const currentPlan = user?.subscription?.plan || 'free';
+  // Removed - now using isLoadingPaymentSystem from hook
   const styles = useThemedStyles(createStyles);
+
+  // Payments hook - simplified to essentials only
   const {
-    confirmNativePayment,
-    isNativePaySupported,
-    isProcessing: isNativeProcessing
-  } = useNativePayment();
+    isPaymentSystemReady,
+    isLoadingPaymentSystem,
+    subscription,
+    hasActiveSubscription,
+    canAccessPlan,
+    purchaseSubscription,
+    isPurchasing,
+    restorePurchases  // Mobile only
+  } = usePayments();
 
   // Track paywall view
   useEffect(() => {
@@ -44,20 +51,18 @@ export default function PlanSelection() {
   // Default to Pro plan (recommended)
   const [selectedPlan, setSelectedPlan] = useState<PlanType | null>('pro');
   const [billingPeriod, setBillingPeriod] = useState<BillingPeriod>('yearly');
-  const [showPaymentModal, setShowPaymentModal] = useState(false);
+
   const [showWebPaymentModal, setShowWebPaymentModal] = useState(false);
   const [expandedPlan, setExpandedPlan] = useState<PlanType | null>(null);
 
   React.useEffect(() => {
-    if (currentPlan && currentPlan !== 'free') {
+    // Skip to next step if user already has a subscription
+    if (hasActiveSubscription) {
       completeAndNavigate();
     }
-  }, [currentPlan, completeAndNavigate]);
+  }, [hasActiveSubscription, completeAndNavigate]);
 
-  // Log native payment support status
-  useEffect(() => {
-    console.log('[PlanSelection] Native payment supported:', isNativePaySupported);
-  }, [isNativePaySupported]);
+
 
   // Animation values for card selection
   const scaleAnimations = useRef({
@@ -67,8 +72,8 @@ export default function PlanSelection() {
   }).current;
 
   const handleContinue = async () => {
-    if (!selectedPlan) {
-      // No plan selected, continue with free
+    if (!selectedPlan || selectedPlan === 'free') {
+      // No plan selected or free plan, continue without payment
       await completeAndNavigate();
       return;
     }
@@ -76,52 +81,41 @@ export default function PlanSelection() {
     // Track plan selection when starting checkout
     trackPaywall.selectPlan(selectedPlan, 'free', billingPeriod);
 
-    // On mobile with native payment support, directly trigger Apple Pay/Google Pay
-    if (Platform.OS !== 'web' && isNativePaySupported && selectedPlan !== 'free') {
-      console.log('[PlanSelection] Triggering native payment directly');
-      const result = await confirmNativePayment(selectedPlan, billingPeriod);
-
-      if (result.success) {
-        const price = getPrice(selectedPlan);
-        await trackPaywall.startSubscription(selectedPlan, billingPeriod, price);
-        await completeAndNavigate();
-      } else if (result.error === 'canceled') {
-        // User canceled, do nothing
-        console.log('[PlanSelection] User canceled native payment');
-      } else if (result.error) {
-        // If native payment fails for other reasons, fall back to modal
-        console.log('[PlanSelection] Native payment failed, showing modal:', result.error);
-        setShowPaymentModal(true);
-      }
-    } else if (Platform.OS === 'web') {
-      // On web, show modal with inline payment
-      console.log('[PlanSelection] Showing web payment modal');
+    // Handle purchase - the hook manages platform differences
+    if (Platform.OS === 'web') {
+      // On web, show modal for payment
       setShowWebPaymentModal(true);
     } else {
-      // On mobile when native payment isn't available, show the modal
-      console.log('[PlanSelection] Showing payment modal (no native support)');
-      setShowPaymentModal(true);
+      // On mobile, trigger purchase directly
+      await handlePurchase();
     }
   };
 
-  const handlePaymentSuccess = async () => {
-    setShowPaymentModal(false);
-    setShowWebPaymentModal(false);
+  const handlePurchase = async () => {
     if (!selectedPlan || selectedPlan === 'free') return;
 
-    const price = getPrice(selectedPlan);
+    const result = await purchaseSubscription(selectedPlan, billingPeriod);
 
-    // Track successful subscription
-    await trackPaywall.startSubscription(selectedPlan, billingPeriod, price);
+    if (result.success) {
+      const price = getPrice(selectedPlan);
+      await trackPaywall.startSubscription(selectedPlan, billingPeriod, price);
 
-    await completeAndNavigate();
-  };
+      if (Platform.OS === 'web') {
+        setShowWebPaymentModal(false);
+      }
 
-  const handlePaymentCancel = () => {
-    setShowPaymentModal(false);
-    setShowWebPaymentModal(false);
-    if (selectedPlan && selectedPlan !== 'free') {
-      trackPaywall.dismissPaywall(selectedPlan, 'close_button');
+      await completeAndNavigate();
+    } else if (result.userCancelled) {
+      console.log('[PlanSelection] User canceled purchase');
+      if (Platform.OS === 'web') {
+        setShowWebPaymentModal(false);
+        trackPaywall.dismissPaywall(selectedPlan, 'close_button');
+      }
+    } else if (result.error) {
+      console.error('[PlanSelection] Purchase failed:', result.error);
+      if (Platform.OS === 'web') {
+        setShowWebPaymentModal(false);
+      }
     }
   };
 
@@ -211,7 +205,7 @@ export default function PlanSelection() {
     <OnboardingLayout
       buttonTitle={getCTAText()}
       onButtonPress={handleContinue}
-      isButtonLoading={isNativeProcessing || isSubscriptionLoading}
+      isButtonLoading={isPurchasing || isLoadingPaymentSystem}
       hideProgress={true}
     >
       <ScrollView
@@ -378,18 +372,9 @@ export default function PlanSelection() {
         </View>
       </ScrollView>
 
-      {/* Mobile Payment Modal */}
-      {selectedPlan && selectedPlan !== 'free' && Platform.OS !== 'web' && (
-        <PlanSelectionPayment
-          visible={showPaymentModal}
-          plan={selectedPlan}
-          period={billingPeriod}
-          onSuccess={handlePaymentSuccess}
-          onCancel={handlePaymentCancel}
-        />
-      )}
+      {/* Mobile payment is handled directly by the SDK - no modal needed */}
 
-      {/* Web Payment Modal with inline payment */}
+      {/* Web Payment Modal */}
       {Platform.OS === 'web' && selectedPlan && selectedPlan !== 'free' && (
         <ResponsiveModal
           visible={showWebPaymentModal}
@@ -405,15 +390,16 @@ export default function PlanSelection() {
             <Text style={styles.webModalPlanInfo}>
               {selectedPlan.charAt(0).toUpperCase() + selectedPlan.slice(1)} Plan - ${billingPeriod === 'yearly' ? getMonthlyEquivalent(getPrice(selectedPlan)) : getPrice(selectedPlan)}/month
             </Text>
-            <PaymentSelection
-              plan={selectedPlan}
-              period={billingPeriod}
-              onSuccess={handlePaymentSuccess}
-              onError={(error) => {
-                console.error('[PlanSelection] Web payment error:', error);
-                trackPaywall.dismissPaywall(selectedPlan, 'close_button');
-              }}
-            />
+            <TouchableOpacity
+              style={styles.webPurchaseButton}
+              onPress={handlePurchase}
+              disabled={isPurchasing}
+            >
+              <Text style={styles.webPurchaseButtonText}>
+                {isPurchasing ? 'Processing...' : 'Complete Purchase'}
+              </Text>
+            </TouchableOpacity>
+            <Text style={styles.webSecureText}>Secure payment • Cancel anytime</Text>
           </View>
         </ResponsiveModal>
       )}

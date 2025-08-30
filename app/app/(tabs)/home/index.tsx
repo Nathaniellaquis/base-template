@@ -3,19 +3,17 @@ import { useCallback, useState } from 'react';
 import { RefreshControl, ScrollView, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@/providers/auth';
-import { usePayment } from '@/providers/payment';
 import { useTheme } from '@/providers/theme';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useThemedStyles } from '@/styles';
 import { createHomeStyles } from './index.styles';
 import { Text, Card, NotificationBadge } from '@/components/ui';
-import { PlanBadge } from '@/components/features/payment';
 import { NotificationsOverlay } from '@/components/features/notifications';
 
 export default function HomeScreen() {
   const { user, loading: authLoading } = useAuth();
-  const { plan } = usePayment();
   const { theme } = useTheme();
+  const plan = user?.subscription?.plan || 'free';
   const { unreadCount } = useNotifications();
   const [refreshing, setRefreshing] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
@@ -78,7 +76,16 @@ export default function HomeScreen() {
                 Here&apos;s your dashboard overview
               </Text>
             </View>
-            <PlanBadge plan={plan} size="medium" />
+            <View style={{ 
+              backgroundColor: plan === 'free' ? '#6b7280' : plan === 'pro' ? '#667eea' : '#059669', 
+              paddingHorizontal: 12, 
+              paddingVertical: 6, 
+              borderRadius: 6 
+            }}>
+              <Text style={{ color: 'white', fontSize: 14, fontWeight: '600', textTransform: 'uppercase' }}>
+                {plan}
+              </Text>
+            </View>
           </View>
         </Card>
 

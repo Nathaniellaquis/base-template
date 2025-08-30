@@ -52,7 +52,7 @@ export function parseDeepLink(url: string): NotificationDeepLink | null {
  */
 export function navigateFromNotification(data: NotificationDeepLink & { notificationId?: string }) {
   // Track navigation
-  analytics.track('notification_deep_link_navigation', {
+  trackEvent('notification_deep_link_navigation', {
     type: data.type,
     action: data.action,
     hasTargetId: !!data.targetId,
@@ -79,7 +79,7 @@ export function navigateFromNotification(data: NotificationDeepLink & { notifica
     case 'reminder':
     default:
       // Default to notifications list
-      router.push('/(tabs)/notifications');
+      router.push('/(tabs)/home');
   }
 }
 
@@ -92,7 +92,7 @@ function handlePaymentNavigation(data: NotificationDeepLink) {
       
     case 'payment_failed':
     case 'payment_method_required':
-      router.push('/(tabs)/settings/payment-methods');
+      router.push('/(tabs)/settings');
       break;
       
     case 'invoice_ready':
@@ -113,7 +113,7 @@ function handleUserNavigation(data: NotificationDeepLink) {
   switch (data.action) {
     case 'profile_update':
     case 'achievement_unlocked':
-      router.push('/(tabs)/profile');
+      router.push('/(tabs)/settings');
       break;
       
     case 'account_security':
@@ -121,7 +121,7 @@ function handleUserNavigation(data: NotificationDeepLink) {
       break;
       
     default:
-      router.push('/(tabs)/profile');
+      router.push('/(tabs)/settings');
   }
 }
 
@@ -129,16 +129,16 @@ function handleSocialNavigation(data: NotificationDeepLink) {
   switch (data.action) {
     case 'new_follower':
     case 'mention':
-      router.push('/(tabs)/profile');
+      router.push('/(tabs)/settings');
       break;
       
     case 'message':
       // In the future, could navigate to messages
-      router.push('/(tabs)/notifications');
+      router.push('/(tabs)/home');
       break;
       
     default:
-      router.push('/(tabs)/notifications');
+      router.push('/(tabs)/home');
   }
 }
 
@@ -151,7 +151,7 @@ function handleUpdateNavigation(data: NotificationDeepLink) {
       
     case 'maintenance':
     case 'system_update':
-      router.push('/(tabs)/notifications');
+      router.push('/(tabs)/home');
       break;
       
     default:
@@ -169,6 +169,8 @@ export function setupNotificationHandlers() {
       shouldShowAlert: true,
       shouldPlaySound: true,
       shouldSetBadge: true,
+      shouldShowBanner: true,
+      shouldShowList: true,
     }),
   });
   
@@ -177,11 +179,11 @@ export function setupNotificationHandlers() {
     if (response) {
       const data = response.notification.request.content.data;
       if (data?.deepLink) {
-        const parsed = parseDeepLink(data.deepLink);
+        const parsed = parseDeepLink(String(data.deepLink));
         if (parsed) {
           navigateFromNotification({
             ...parsed,
-            notificationId: data.notificationId,
+            notificationId: data.notificationId as string | undefined,
           });
         }
       }

@@ -1,0 +1,15 @@
+{
+  "expo": {
+    "extra": {
+      "eas": {
+        "projectId": "7a34e809-e825-413b-a62c-c1b905694e45"
+      }
+    },
+    "ios": {
+      "bundleIdentifier": "com.natecreates.base-template",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    }
+  }
+}

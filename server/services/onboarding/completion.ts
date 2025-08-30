@@ -7,6 +7,7 @@ import { ObjectId } from 'mongodb';
 import { getOnboardingCollection, getUserCollection } from '@/config/mongodb';
 import { mongoDocToUser } from '@/utils/database/mongodb';
 import { createLogger } from '@/utils/logging/logger';
+import { getTotalOnboardingSteps } from './config';
 import type { User, OnboardingDocument } from '@shared';
 
 const logger = createLogger('OnboardingCompletionService');
@@ -25,7 +26,7 @@ export async function completeStep(userId: string): Promise<{
 }> {
   const onboardingCollection = getOnboardingCollection();
   const usersCollection = getUserCollection();
-  const { TOTAL_ONBOARDING_STEPS } = await import('@shared');
+  const TOTAL_ONBOARDING_STEPS = getTotalOnboardingSteps();
   
   // Get current onboarding state
   const onboarding = await onboardingCollection.findOne({
@@ -109,7 +110,7 @@ export async function skipToStep(
 }> {
   const onboardingCollection = getOnboardingCollection();
   const usersCollection = getUserCollection();
-  const { TOTAL_ONBOARDING_STEPS } = await import('@shared');
+  const TOTAL_ONBOARDING_STEPS = getTotalOnboardingSteps();
   
   // Validate step
   if (targetStep < 0 || targetStep > TOTAL_ONBOARDING_STEPS) {
@@ -168,7 +169,7 @@ export async function skipToStep(
 export async function completeOnboarding(userId: string): Promise<User> {
   const onboardingCollection = getOnboardingCollection();
   const usersCollection = getUserCollection();
-  const { TOTAL_ONBOARDING_STEPS } = await import('@shared');
+  const TOTAL_ONBOARDING_STEPS = getTotalOnboardingSteps();
   
   // Update or create onboarding document
   await onboardingCollection.updateOne(
@@ -220,7 +221,7 @@ export async function canAccessStep(
   stepNumber: number
 ): Promise<boolean> {
   const onboardingCollection = getOnboardingCollection();
-  const { TOTAL_ONBOARDING_STEPS } = await import('@shared');
+  const TOTAL_ONBOARDING_STEPS = getTotalOnboardingSteps();
   
   if (stepNumber < 0 || stepNumber >= TOTAL_ONBOARDING_STEPS) {
     return false;

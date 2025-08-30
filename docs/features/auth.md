@@ -54,9 +54,8 @@ interface User {
   
   // Subscription data
   subscription?: {
-    stripeCustomerId?: string;
-    stripePriceId?: string;
-    stripeProductId?: string;
+    revenueCatId?: string;
+    productId?: string;
     trialEndsAt?: Date;
   };
   

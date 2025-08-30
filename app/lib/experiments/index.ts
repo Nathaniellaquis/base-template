@@ -22,7 +22,7 @@ export const EXPERIMENTS = {
 export const FEATURE_FLAGS = {
   NOTIFICATIONS: 'notifications_enabled',
   ADMIN_PANEL: 'admin_panel_enabled',
-  STRIPE_PAYMENTS: 'stripe_payments_enabled',
+
   KILL_PAYWALL: 'kill_paywall',
   KILL_ONBOARDING: 'kill_onboarding',
 } as const;
@@ -85,15 +85,15 @@ export function calculateSampleSize(
   // Z-scores for confidence and power
   const zAlpha = confidence === 0.95 ? 1.96 : confidence === 0.99 ? 2.58 : 1.645;
   const zBeta = power === 0.8 ? 0.84 : power === 0.9 ? 1.28 : 0.84;
-  
+
   // Calculate sample size
   const p1 = baselineRate;
   const p2 = baselineRate + minimumEffect;
   const pBar = (p1 + p2) / 2;
-  
+
   const numerator = 2 * pBar * (1 - pBar) * Math.pow(zAlpha + zBeta, 2);
   const denominator = Math.pow(p1 - p2, 2);
-  
+
   return Math.ceil(numerator / denominator);
 }
 
@@ -109,21 +109,21 @@ export function isStatisticallySignificant(
 ): boolean {
   const controlRate = controlConversions / controlTotal;
   const variantRate = variantConversions / variantTotal;
-  
+
   // Calculate pooled probability
   const pooledProbability = (controlConversions + variantConversions) / (controlTotal + variantTotal);
-  
+
   // Calculate standard error
   const standardError = Math.sqrt(
     pooledProbability * (1 - pooledProbability) * (1 / controlTotal + 1 / variantTotal)
   );
-  
+
   // Calculate z-score
   const zScore = Math.abs(variantRate - controlRate) / standardError;
-  
+
   // Check significance based on confidence level
   const zThreshold = confidence === 0.95 ? 1.96 : confidence === 0.99 ? 2.58 : 1.645;
-  
+
   return zScore > zThreshold;
 }
 

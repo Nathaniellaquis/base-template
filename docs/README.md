@@ -16,6 +16,9 @@ Core system design and technical decisions.
 
 - **[System Overview](./architecture/overview.md)** - Complete architecture, data flow, and component interaction
 - **[Type System](./architecture/types.md)** - Type organization, shared types, and validation patterns
+- **[Directory Structure](./architecture/directory-structure.md)** - Project organization and file structure
+- **[Caching Strategy](./architecture/caching-strategy.md)** - Data caching patterns with React Query
+- **[Mutation Pattern](./architecture/mutation-pattern.md)** - Optimistic updates and data synchronization
 
 ### 📖 Development Guides
 Step-by-step guides for development and implementation.
@@ -29,10 +32,11 @@ Step-by-step guides for development and implementation.
 ### 🚀 Features
 Documentation for specific features and their implementation.
 
-- **[Payment System](./features/payments.md)** 💳 - Stripe integration with subscription management
+- **[Payment System](./features/payment.md)** 💳 - RevenueCat integration with cross-platform subscription management
 - **[Notifications](./features/notifications.md)** 🔔 - Push notification system with multi-device support
 - **[Onboarding](./features/onboarding.md)** 🎯 - User onboarding flow and configuration
 - **[Admin System](./features/admin.md)** 👮 - Role-based admin dashboard and management
+- **[Workspaces](./features/workspaces.md)** 🏢 - Optional multi-workspace feature with teams
 
 ## 🎯 Quick Start Guides
 
@@ -81,10 +85,13 @@ docs/
 │   ├── development.md       # Coding standards
 │   └── feature-development-workflow.md # Feature process
 ├── features/               
-│   ├── payments.md          # Stripe payment system
+│   ├── payment.md           # RevenueCat payment system
 │   ├── admin.md            # Admin dashboard
 │   ├── notifications.md    # Push notifications
-│   └── onboarding.md       # User onboarding
+│   ├── onboarding.md       # User onboarding
+│   └── workspaces.md       # Multi-workspace feature
+├── backend/
+│   └── README.md           # Backend architecture overview
 └── proposals/              # Future feature proposals
 ```
 
@@ -92,15 +99,17 @@ docs/
 
 ### ✅ Completed
 - System Architecture Overview
-- Type System Design
+- Type System Design (Updated with tRPC patterns)
 - Authentication Flow
-- Development Standards
+- Development Standards (Added TypeScript best practices)
 - Feature Development Workflow
 - Getting Started Guide
-- Payment System (Stripe Integration)
+- Payment System (RevenueCat Integration - Cross-platform subscriptions)
 - Notification System
 - Onboarding Flow
 - Admin System
+- Workspaces (Optional feature with type-safe stub)
+- TypeScript Configuration (All app code now compiles cleanly)
 
 ### 🚧 In Progress / Planned
 

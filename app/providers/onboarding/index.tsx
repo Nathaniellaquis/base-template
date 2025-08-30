@@ -77,7 +77,8 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
   // Get onboarding state directly from user (no duplicate fetch!)
   const onboardingCompleted = user.onboardingCompleted ?? false;
   const actualStep = user.onboarding?.currentStep ?? 0;
-  const totalSteps = user.onboarding?.totalSteps ?? TOTAL_STEPS;
+  // Always use the current total steps from config, not the saved value
+  const totalSteps = TOTAL_STEPS;
   
   // When transitioning, show the next step in progress bar
   const currentStep = isTransitioning ? actualStep + 1 : actualStep;

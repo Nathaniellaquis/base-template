@@ -18,7 +18,6 @@ export interface Subscription {
   period: BillingPeriod;
   currentPeriodEnd?: Date;
   cancelAtPeriodEnd: boolean;
-  priceId?: string;
   productId?: string;
   lastSyncedAt?: Date;
 }
@@ -37,16 +36,12 @@ export interface PaymentMethod {
 // ======= Zod Schemas =======
 
 export const createSubscriptionSchema = z.object({
-  priceId: z.string(),
-  paymentMethodId: z.string().optional(),
+  plan: z.enum(['basic', 'pro', 'enterprise']),
+  period: z.enum(['monthly', 'yearly']),
 });
 
 export const cancelSubscriptionSchema = z.object({
   immediate: z.boolean().default(false),
-});
-
-export const updatePaymentMethodSchema = z.object({
-  paymentMethodId: z.string(),
 });
 
 // ======= Payment Context Types =======
@@ -69,66 +64,83 @@ export interface SubscribeResult {
   plan: PlanType;
   period?: BillingPeriod;
   subscriptionId?: string;
-  clientSecret?: string;
   effectiveDate?: string | Date;
-  customerId?: string;
-  ephemeralKey?: string;
-  paymentIntentId?: string;
-  amount?: number;
   user?: any; // Can be more specific if needed
-  intentType?: 'setup' | 'payment'; // Indicates whether SetupIntent (trial) or PaymentIntent (immediate charge)
 }
 
 // ======= API Response Types =======
 
 export interface CreateSubscriptionResponse {
   subscriptionId: string;
-  clientSecret: string;
   status: SubscriptionStatus;
-}
-
-export interface CreateSetupIntentResponse {
-  clientSecret: string;
-  setupIntentId: string;
-  customerId?: string;
 }
 
 export interface CustomerPortalResponse {
   url: string;
 }
 
-// ======= Stripe Webhook Events =======
+// ======= RevenueCat Types =======
 
-export interface StripeWebhookEvent {
-  id: string;
-  type: string;
-  data: {
-    object: any;
-  };
+export interface RevenueCatSubscriptionInfo {
+  isActive: boolean;
+  plan: PlanType;
+  period?: BillingPeriod;
+  expiresAt?: Date;
+  willRenew?: boolean;
+  isInTrialPeriod?: boolean;
+  isInGracePeriod?: boolean;
+  store?: 'APP_STORE' | 'PLAY_STORE' | 'STRIPE' | 'PROMOTIONAL';
 }
+
+export interface RevenueCatPurchaseResult {
+  success: boolean;
+  customerInfo?: any; // RevenueCat CustomerInfo type
+  error?: any; // RevenueCat PurchasesError type
+  userCancelled?: boolean;
+}
+
+// RevenueCat Entitlement IDs - must match dashboard
+export const REVENUECAT_ENTITLEMENTS = {
+  FREE: 'free',
+  BASIC: 'basic',
+  PRO: 'pro',
+  ENTERPRISE: 'enterprise',
+} as const;
+
+export type RevenueCatEntitlementId = typeof REVENUECAT_ENTITLEMENTS[keyof typeof REVENUECAT_ENTITLEMENTS];
+
+// RevenueCat Package Identifiers
+export const REVENUECAT_PACKAGES = {
+  BASIC_MONTHLY: 'basic_monthly',
+  BASIC_YEARLY: 'basic_yearly',
+  PRO_MONTHLY: 'pro_monthly',
+  PRO_YEARLY: 'pro_yearly',
+  ENTERPRISE_MONTHLY: 'enterprise_monthly',
+  ENTERPRISE_YEARLY: 'enterprise_yearly',
+} as const;
 
 // ======= Pricing Configuration =======
 
 export const PRICING = {
   basic: {
-    monthly: 9.99,
-    yearly: 99.99,  // ~17% discount
+    monthly: 4.99,
+    yearly: 49.99,  // ~17% discount
+    yearlyMonthly: 4.17, // Yearly price divided by 12
     savings: '2 months free',
   },
   pro: {
-    monthly: 29.99,
-    yearly: 299.99, // ~17% discount
+    monthly: 9.99,
+    yearly: 99.99, // ~17% discount
+    yearlyMonthly: 8.33,
     savings: '2 months free',
   },
   enterprise: {
-    monthly: 99.99,
-    yearly: 999.99, // ~17% discount
+    monthly: 19.99,
+    yearly: 199.99, // ~17% discount
+    yearlyMonthly: 16.67,
     savings: '2 months free',
   },
 } as const;
-
-// Price IDs moved to server/config/stripe.ts
-// This ensures shared types remain environment-agnostic
 
 // ======= Plan Limits (for display purposes only) =======
 

@@ -206,41 +206,38 @@ describe('User Router', () => {
 
 #### Service Test
 ```typescript
-// server/services/stripe/__tests__/subscription.test.ts
-import { createSubscription } from '../core-operations/create-subscription';
-import { stripe } from '../stripe-client';
+// server/services/revenuecat/__tests__/subscription.test.ts
+import { syncUserWithRevenueCat } from '../user-sync';
+import { getCustomer } from '../operations/customer';
 
-jest.mock('../stripe-client');
+jest.mock('../operations/customer');
 
 describe('Subscription Service', () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
-  it('creates subscription with trial', async () => {
-    const mockSubscription = {
-      id: 'sub_123',
-      status: 'trialing',
-      latest_invoice: { payment_intent: { client_secret: 'secret_123' } }
+  it('syncs subscription with RevenueCat', async () => {
+    const mockCustomerInfo = {
+      subscriber: {
+        entitlements: { pro: { expires_date: null } },
+        subscriptions: { 'prod_123': { store: 'APP_STORE' } }
+      }
     };
 
-    stripe.subscriptions.create.mockResolvedValue(mockSubscription);
+    getCustomer.mockResolvedValue(mockCustomerInfo);
 
-    const result = await createSubscription('cus_123', 'price_123');
+    const result = await syncUserWithRevenueCat('user_123');
 
     expect(result).toEqual({
-      subscriptionId: 'sub_123',
-      clientSecret: 'secret_123',
-      status: 'trialing'
+      subscription: {
+        plan: 'pro',
+        status: 'active',
+        isActive: true
+      }
     });
 
-    expect(stripe.subscriptions.create).toHaveBeenCalledWith({
-      customer: 'cus_123',
-      items: [{ price: 'price_123' }],
-      payment_behavior: 'default_incomplete',
-      trial_period_days: 14,
-      expand: ['latest_invoice.payment_intent']
-    });
+    expect(getCustomer).toHaveBeenCalledWith('user_123');
   });
 });
 ```
@@ -275,7 +272,7 @@ describe('User Flow', () => {
     });
 
     expect(user.uid).toBe('test-123');
-    expect(user.stripeCustomerId).toBeDefined();
+    expect(user.revenueCatId).toBeDefined();
 
     // Verify MongoDB document
     const dbUser = await getUserCollection().findOne({ uid: 'test-123' });
@@ -351,26 +348,28 @@ jest.mock('firebase/auth', () => ({
 }));
 ```
 
-### Mock Stripe
+### Mock RevenueCat
 ```typescript
-// test/mocks/stripe.ts
-export const mockStripe = {
-  customers: {
-    create: jest.fn().mockResolvedValue({ id: 'cus_test' })
-  },
-  subscriptions: {
-    create: jest.fn().mockResolvedValue({
-      id: 'sub_test',
-      status: 'active'
-    }),
-    update: jest.fn(),
-    cancel: jest.fn()
-  }
+// test/mocks/revenuecat.ts
+export const mockRevenueCat = {
+  getCustomer: jest.fn().mockResolvedValue({
+    subscriber: {
+      entitlements: { pro: { expires_date: null } }
+    }
+  }),
+  revokeSubscription: jest.fn(),
+  grantEntitlement: jest.fn()
 };
 
-jest.mock('stripe', () => ({
-  default: jest.fn(() => mockStripe)
-}));
+export const mockPurchases = {
+  configure: jest.fn(),
+  getCustomerInfo: jest.fn(),
+  purchasePackage: jest.fn(),
+  restorePurchases: jest.fn()
+};
+
+jest.mock('@/services/revenuecat', () => mockRevenueCat);
+jest.mock('react-native-purchases', () => mockPurchases);
 ```
 
 ### Test Utilities
@@ -481,24 +480,24 @@ it('works with valid token', async () => {
 });
 ```
 
-#### Testing Stripe Webhooks
+#### Testing RevenueCat Webhooks
 ```typescript
-it('handles subscription created webhook', async () => {
-  const payload = stripeWebhookFixture('customer.subscription.created');
-  const signature = stripe.webhooks.generateTestHeaderString({
+it('handles initial purchase webhook', async () => {
+  const payload = revenueCatWebhookFixture('INITIAL_PURCHASE');
+  const signature = generateRevenueCatSignature(
     payload,
-    secret: process.env.STRIPE_WEBHOOK_SECRET
-  });
+    process.env.REVENUECAT_WEBHOOK_SECRET
+  );
 
   const response = await request(app)
-    .post('/webhook/stripe')
-    .set('stripe-signature', signature)
+    .post('/webhooks/revenuecat')
+    .set('X-RevenueCat-Signature', signature)
     .send(payload);
 
   expect(response.status).toBe(200);
-  
+
   // Verify user subscription updated
-  const user = await getUserByStripeCustomerId('cus_test');
+  const user = await getUserByRevenueCatId('rc_user_test');
   expect(user.subscription.status).toBe('active');
 });
 ```

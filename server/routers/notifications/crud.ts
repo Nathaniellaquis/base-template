@@ -4,6 +4,7 @@
  */
 
 import { router, protectedProcedure } from '@/trpc/trpc';
+import { addDataScope } from '@/utils/workspace-scoping';
 import { 
   sendNotificationSchema,
   markAsReadSchema,

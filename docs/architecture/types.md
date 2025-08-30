@@ -1,368 +1,355 @@
-# Type Architecture Guide
+# Types Architecture Documentation
 
 ## Overview
-This document explains our TypeScript type architecture and the reasoning behind our organizational decisions. We follow industry best practices for type co-location and separation of concerns.
 
-## Core Principles
+This document outlines the TypeScript type patterns and best practices used throughout the application, with special focus on tRPC integration and route typing.
 
-### 1. Co-location Over Centralization
-We co-locate types with their usage context rather than centralizing everything in a single location.
+## tRPC Type Patterns
 
-### 2. Shared vs Local Types
-- **Shared types** → `/types` folder (used across client/server)
-- **Local types** → Co-located with implementation (component/context specific)
+### Proper Hook Usage
 
-## Type Organization Structure
+tRPC provides different hooks for different purposes. Using the correct hook is critical for type safety:
 
-```
-ingrd/
-├── types/                          # Shared domain types & validation
-│   ├── user.ts                    # User domain model + Zod schemas
-│   ├── admin.ts                   # Admin operations + Zod schemas
-│   ├── notifications.ts           # Notification models + Zod schemas
-│   ├── onboarding.ts              # Onboarding flow + Zod schemas
-│   ├── notification.ts            # MongoDB document types
-│   └── mongodb-validation.ts      # Centralized ObjectId validation
-│
-├── app/
-│   ├── components/
-│   │   └── ui/
-│   │       ├── Button/
-│   │       │   └── index.tsx      # Contains ButtonProps (local)
-│   │       ├── Card/
-│   │       │   └── index.tsx      # Contains CardProps (local)
-│   │       └── Input/
-│   │           └── index.tsx      # Contains InputProps (local)
-│   │
-│   └── providers/
-│       ├── auth-provider.tsx      # Contains AuthContextValue (local)
-│       ├── admin-provider.tsx     # Contains AdminContextValue (local)
-│       └── theme-provider.tsx     # Contains ThemeContextValue (local)
-│
-└── server/
-    ├── trpc/
-    │   └── context.ts             # Contains Context type (server-only)
-    └── config.ts                  # Contains Config interface (server-only)
-```
+#### 1. useContext vs useUtils
 
-## Type Categories
-
-### 1. Domain Types (Shared)
-**Location**: `/types/*.ts`
-
-**What goes here**:
-- Database models
-- API contracts
-- Validation schemas (Zod)
-- Business logic types
-
-**Example**:
+**❌ Common Mistake:**
 ```typescript
-// types/user.ts
-export interface User {
-  uid: string;
-  email: string;
-  role?: 'user' | 'admin';
+// This is WRONG - useContext doesn't exist in tRPC v10+
+const ctx = api.useContext()
+```
+
+**✅ Correct Usage:**
+```typescript
+// Use useUtils for cache invalidation and other utilities
+const utils = api.useUtils()
+
+// Invalidate queries
+await utils.user.getProfile.invalidate()
+
+// Set query data
+utils.user.getProfile.setData({ id: userId }, newData)
+```
+
+#### 2. Query vs Mutation Hooks
+
+**❌ Wrong:**
+```typescript
+// Using query hook for mutations
+const { data } = api.user.updateProfile.useQuery({ name: 'John' })
+```
+
+**✅ Correct:**
+```typescript
+// Use mutation hook for mutations
+const updateProfile = api.user.updateProfile.useMutation()
+
+// Execute mutation
+await updateProfile.mutateAsync({ name: 'John' })
+```
+
+### tRPC Router Type Inference
+
+The tRPC router automatically infers types from your procedures:
+
+```typescript
+// server/routers/user.ts
+export const userRouter = router({
+  getProfile: protectedProcedure
+    .input(z.object({ userId: z.string() }))
+    .query(async ({ input, ctx }) => {
+      // Return type is automatically inferred
+      return await getUserProfile(input.userId)
+    }),
+    
+  updateProfile: protectedProcedure
+    .input(z.object({
+      name: z.string().optional(),
+      email: z.string().email().optional()
+    }))
+    .mutation(async ({ input, ctx }) => {
+      return await updateUser(ctx.user.id, input)
+    })
+})
+
+// Client automatically has full type safety
+const { data } = api.user.getProfile.useQuery({ userId: '123' })
+// data is typed as the return type of getUserProfile
+```
+
+### Error Handling with tRPC
+
+```typescript
+// Proper error handling pattern
+const mutation = api.user.updateProfile.useMutation({
+  onError: (error) => {
+    // error.message is the TRPCError message
+    console.error('Update failed:', error.message)
+  },
+  onSuccess: (data) => {
+    // data is fully typed
+    console.log('Profile updated:', data.name)
+  }
+})
+```
+
+## Expo Router Typing
+
+### Route Parameters
+
+Proper typing for Expo Router navigation:
+
+```typescript
+// types/navigation.ts
+export type RootStackParamList = {
+  Home: undefined
+  Profile: { userId: string }
+  Settings: { section?: 'account' | 'privacy' | 'notifications' }
 }
 
-export const createUserSchema = z.object({
-  displayName: z.string().min(1).max(50),
-});
+// In components
+import { useLocalSearchParams } from 'expo-router'
+import type { RootStackParamList } from '@/types/navigation'
+
+export default function ProfileScreen() {
+  // Properly typed params
+  const params = useLocalSearchParams<RootStackParamList['Profile']>()
+  const userId = params.userId // string
+}
 ```
 
-**Why**: These types define the core business domain and are shared between frontend and backend.
+### Link Components
 
-### 2. Component Props (Local)
-**Location**: Co-located with component
-
-**What goes here**:
-- Component prop interfaces
-- Component-specific types
-- Style types
-
-**Example**:
 ```typescript
-// app/components/ui/Button/index.tsx
+import { Link } from 'expo-router'
+
+// Type-safe navigation
+<Link
+  href={{
+    pathname: '/profile/[userId]',
+    params: { userId: user.id }
+  }}
+>
+  View Profile
+</Link>
+```
+
+### Programmatic Navigation
+
+```typescript
+import { useRouter } from 'expo-router'
+
+const router = useRouter()
+
+// Navigate with type safety
+router.push({
+  pathname: '/settings',
+  params: { section: 'privacy' }
+})
+```
+
+## Component Type Patterns
+
+### Props with Children
+
+```typescript
+// Proper typing for components with children
+interface LayoutProps {
+  title: string
+  children: React.ReactNode // Not ReactElement or JSX.Element
+}
+
+export function Layout({ title, children }: LayoutProps) {
+  return (
+    <View>
+      <Text>{title}</Text>
+      {children}
+    </View>
+  )
+}
+```
+
+### Event Handlers
+
+```typescript
+// Properly typed event handlers
 interface ButtonProps {
-  title: string;
-  variant?: 'primary' | 'secondary';
-  onPress: () => void;
+  onPress: () => void // Not 'Function' or 'any'
+  onLongPress?: () => Promise<void>
 }
 
-export function Button({ title, variant, onPress }: ButtonProps) {
-  // ...
+// With parameters
+interface InputProps {
+  onChange: (value: string) => void
+  onFocus?: (event: NativeSyntheticEvent<TextInputFocusEventData>) => void
 }
 ```
 
-**Why**: 
-- Props are tightly coupled to their component
-- Changes to component often require prop changes
-- No other code needs these types
-- Easier to maintain when co-located
+## State Management Types
 
-### 3. Context Types (Local)
-**Location**: Co-located with provider
+### Context Types
 
-**What goes here**:
-- Context value interfaces
-- Provider-specific types
-
-**Example**:
 ```typescript
-// app/providers/auth-provider.tsx
+// Define context value type
 interface AuthContextValue {
-  user: User | null;
-  login: (email: string, password: string) => Promise<void>;
-  logout: () => Promise<void>;
+  user: User | null
+  isLoading: boolean
+  signIn: (email: string, password: string) => Promise<void>
+  signOut: () => Promise<void>
 }
 
-const AuthContext = createContext<AuthContextValue | undefined>(undefined);
-```
+// Create context with proper type
+const AuthContext = createContext<AuthContextValue | undefined>(undefined)
 
-**Why**:
-- Context shape is defined by the provider
-- Consumers import the hook, not the type
-- Keeps provider implementation details together
-
-### 4. Server Types (Local)
-**Location**: Co-located with server code
-
-**What goes here**:
-- TRPC context
-- Server configuration
-- Internal server types
-
-**Example**:
-```typescript
-// server/trpc/context.ts
-export interface Context {
-  user: User | null;
-  db: Db;
+// Type-safe hook
+export function useAuth() {
+  const context = useContext(AuthContext)
+  if (!context) {
+    throw new Error('useAuth must be used within AuthProvider')
+  }
+  return context // Fully typed!
 }
 ```
 
-**Why**:
-- Never imported by client code
-- Part of server implementation
-- May contain sensitive type information
-
-## Benefits of This Architecture
-
-### 1. **Maintainability**
-- Related code stays together
-- Changes are localized
-- Less file jumping
-
-### 2. **Discoverability**
-- Developers find types where they expect them
-- Component types with components
-- Domain types in types folder
-
-### 3. **No False Dependencies**
-- Components can't accidentally import other component's props
-- Clear boundaries between domains
-
-### 4. **Scalability**
-- New components bring their own types
-- No single file becomes a dumping ground
-- Teams can work independently
-
-### 5. **Type Safety**
-- Zod schemas provide runtime validation
-- TypeScript provides compile-time safety
-- Single source of truth for validation
-
-## Anti-Patterns to Avoid
-
-### ❌ **Don't: Centralize All Types**
-```typescript
-// Bad: Everything in types folder
-/types/
-  ├── ButtonProps.ts
-  ├── CardProps.ts
-  ├── InputProps.ts
-  ├── AuthContextValue.ts
-  └── user.ts
-```
-
-### ❌ **Don't: Inline Complex Types**
-```typescript
-// Bad: Complex type inline
-.input((input: { user: { name: string; email: string } }) => {})
-
-// Good: Use Zod schema
-.input(createUserSchema)
-```
-
-### ❌ **Don't: Duplicate Types**
-```typescript
-// Bad: Same type defined in multiple places
-// client/types.ts
-interface User { name: string }
-// server/types.ts  
-interface User { name: string }
-
-// Good: Single source in /types
-// types/user.ts
-export interface User { name: string }
-```
-
-## Migration Guide
-
-### When to Move Types to `/types`
-
-Move a type to the shared `/types` folder when:
-1. It's used by both client and server
-2. It represents a domain model
-3. It needs validation (Zod schema)
-4. Multiple unrelated components need it
-
-### When to Keep Types Local
-
-Keep types co-located when:
-1. Only used by one component/provider
-2. It's a component prop interface
-3. It's internal to implementation
-4. It would create false dependencies if shared
-
-## Validation Strategy
-
-### All API Inputs Use Zod
-Every TRPC procedure that accepts input MUST use a Zod schema:
+### Reducer Types
 
 ```typescript
-// ✅ Correct
-import { createUserSchema } from '@shared/user';
+// Action types
+type AuthAction =
+  | { type: 'SET_USER'; payload: User }
+  | { type: 'SET_LOADING'; payload: boolean }
+  | { type: 'SIGN_OUT' }
 
-export const createUser = publicProcedure
-  .input(createUserSchema)
-  .mutation(async ({ input }) => {
-    // input is validated and typed
-  });
+// State type
+interface AuthState {
+  user: User | null
+  isLoading: boolean
+}
 
-// ❌ Wrong - no validation
-export const createUser = publicProcedure
-  .input((input: any) => input)
-  .mutation(async ({ input }) => {
-    // input is not validated
-  });
+// Reducer with exhaustive checking
+function authReducer(state: AuthState, action: AuthAction): AuthState {
+  switch (action.type) {
+    case 'SET_USER':
+      return { ...state, user: action.payload }
+    case 'SET_LOADING':
+      return { ...state, isLoading: action.payload }
+    case 'SIGN_OUT':
+      return { ...state, user: null }
+    default:
+      // TypeScript ensures this is unreachable
+      const _exhaustive: never = action
+      return state
+  }
+}
 ```
 
-### Benefits of Zod Validation
-1. **Runtime Safety**: Invalid requests rejected before processing
-2. **Type Inference**: TypeScript types automatically generated
-3. **Error Messages**: Clear validation errors returned to client
-4. **Single Source**: One schema for both validation and types
+## API Response Types
+
+### Generic Response Wrapper
+
+```typescript
+// Generic API response type
+interface ApiResponse<T> {
+  success: boolean
+  data?: T
+  error?: {
+    code: string
+    message: string
+  }
+}
+
+// Usage
+type UserResponse = ApiResponse<User>
+type UsersResponse = ApiResponse<User[]>
+```
+
+### Discriminated Unions
+
+```typescript
+// Better than optional properties
+type ApiResult<T> =
+  | { status: 'success'; data: T }
+  | { status: 'error'; error: Error }
+  | { status: 'loading' }
+
+// Usage with type narrowing
+function handleResult<T>(result: ApiResult<T>) {
+  switch (result.status) {
+    case 'success':
+      console.log(result.data) // T
+      break
+    case 'error':
+      console.error(result.error) // Error
+      break
+    case 'loading':
+      console.log('Loading...')
+      break
+  }
+}
+```
+
+## Utility Types
+
+### Common Patterns
+
+```typescript
+// Make all properties optional except specified
+type PartialExcept<T, K extends keyof T> = Partial<T> & Pick<T, K>
+
+// Example usage
+type UpdateUserInput = PartialExcept<User, 'id'>
+// id is required, everything else optional
+
+// Deep readonly
+type DeepReadonly<T> = {
+  readonly [P in keyof T]: T[P] extends object ? DeepReadonly<T[P]> : T[P]
+}
+
+// Nullable type
+type Nullable<T> = T | null | undefined
+
+// Extract promise type
+type UnwrapPromise<T> = T extends Promise<infer U> ? U : T
+```
+
+### Type Guards
+
+```typescript
+// User-defined type guards
+function isUser(value: unknown): value is User {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'id' in value &&
+    'email' in value
+  )
+}
+
+// Array type guard
+function isStringArray(value: unknown): value is string[] {
+  return Array.isArray(value) && value.every(item => typeof item === 'string')
+}
+
+// Usage
+const data: unknown = await fetchData()
+if (isUser(data)) {
+  console.log(data.email) // Safe to access
+}
+```
 
 ## Best Practices
 
-### 1. **Use Path Aliases**
-```typescript
-// Good
-import { User } from '@shared/user';
-import { Button } from '@/components/ui';
+1. **Prefer Interface over Type** for object shapes (better error messages)
+2. **Use Type** for unions, intersections, and utility types
+3. **Enable Strict Mode** in tsconfig.json
+4. **Avoid any** - use `unknown` when type is truly unknown
+5. **Use const assertions** for literal types
+6. **Leverage type inference** - don't over-annotate
+7. **Export types separately** from implementations
 
-// Bad
-import { User } from '../../../types/user';
-```
+## Common Pitfalls
 
-### 2. **Export Thoughtfully**
-```typescript
-// types/user.ts
-export interface User { }           // Export: Used elsewhere
-export const userSchema = z.object(); // Export: Used for validation
-interface UserInternal { }           // Don't export: Internal only
-```
-
-### 3. **Consistent Naming**
-- Interfaces: `PascalCase` (User, ButtonProps)
-- Schemas: `camelCase` with 'Schema' suffix (createUserSchema)
-- Types: `PascalCase` (AdminStats)
-
-### 4. **Document Complex Types**
-```typescript
-/**
- * Represents a user's notification preferences
- * @see NotificationDocument for the notification model
- */
-export interface NotificationPreferences {
-  enabled: boolean;      // Master switch
-  updates: boolean;      // App updates
-  reminders: boolean;    // Task reminders
-  social: boolean;       // Social interactions
-}
-```
-
-### 5. **Use Centralized MongoDB Validation**
-```typescript
-// Import from centralized location
-import { zodObjectId, zodObjectIdString, isValidObjectId } from '@shared/mongodb-validation';
-
-// Use in Zod schemas
-export const getUserSchema = z.object({
-  userId: zodObjectIdString, // Validates ObjectId format
-});
-
-// Use in server code
-if (!isValidObjectId(userId)) {
-  throw errors.badRequest('Invalid user ID');
-}
-```
-
-## Examples
-
-### Example 1: Creating a New Feature
-
-When adding a messaging feature:
-
-```typescript
-// 1. Create domain types in /types/message.ts
-export interface Message {
-  id: string;
-  content: string;
-  userId: string;
-}
-
-export const sendMessageSchema = z.object({
-  content: z.string().min(1).max(1000),
-  recipientId: z.string(),
-});
-
-// 2. Component props stay local
-// app/components/MessageBubble/index.tsx
-interface MessageBubbleProps {
-  message: Message;
-  isOwn: boolean;
-}
-
-// 3. Context stays with provider
-// app/providers/chat-provider.tsx
-interface ChatContextValue {
-  messages: Message[];
-  sendMessage: (content: string) => void;
-}
-```
-
-### Example 2: Refactoring Existing Code
-
-If you find types in the wrong place:
-
-```typescript
-// Before: Props in /types
-// types/components.ts ❌
-export interface ButtonProps { }
-
-// After: Props with component
-// components/Button/index.tsx ✅
-interface ButtonProps { }
-```
-
-## Conclusion
-
-This type architecture provides:
-- **Clear organization**: Know where to find/put types
-- **Maintainability**: Related code stays together
-- **Scalability**: Grows naturally with the codebase
-- **Type safety**: Validation at runtime and compile time
-
-Follow these patterns for a clean, maintainable, and professional TypeScript codebase.
+1. **Incorrect tRPC hook usage** - Always check the API reference
+2. **Missing return types** - Let TypeScript infer when possible
+3. **Overusing type assertions** - Validate at runtime when needed
+4. **Circular type dependencies** - Structure types hierarchically
+5. **Not using discriminated unions** - They enable exhaustive checking

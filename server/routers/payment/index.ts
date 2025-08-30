@@ -1,23 +1,18 @@
+/**
+ * Payment Router
+ * All payment-related tRPC procedures using RevenueCat
+ */
+
 import { router } from '@/trpc/trpc';
-import { getSubscription } from './get-subscription';
-import { subscribe } from './subscribe';
-import { cancel } from './cancel';
-import { createPortalSession } from './create-portal-session';
-import { 
-  getPaymentMethods,
-  createSetupIntent,
-  setDefaultPaymentMethod,
-  removePaymentMethod
-} from './payment-methods';
+
+// RevenueCat implementations
+import { cancelRevenueCat } from './cancel-revenuecat';
+import { getSubscriptionRevenueCat } from './get-subscription-revenuecat';
+import { subscribeRevenueCat } from './subscribe-revenuecat';
 
 export const paymentRouter = router({
-  getSubscription,
-  subscribe,
-  cancel,
-  createPortalSession,
-  // Payment methods management
-  getPaymentMethods,
-  createSetupIntent,
-  setDefaultPaymentMethod,
-  removePaymentMethod,
+    // Subscription management
+    getSubscription: getSubscriptionRevenueCat,
+    subscribe: subscribeRevenueCat,
+    cancel: cancelRevenueCat,
 });

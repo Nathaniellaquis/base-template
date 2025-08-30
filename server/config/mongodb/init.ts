@@ -6,7 +6,7 @@
 import { Collection, Db, MongoClient, ObjectId } from 'mongodb';
 import { mongodbConfig, indexDefinitions } from './config';
 import { createLogger } from '../../utils/logging/logger';
-import type { User, OnboardingDocument, NotificationDocument, ExperimentConfig } from '@shared';
+import type { User, OnboardingDocument, NotificationDocument, ExperimentConfig, Workspace, WorkspaceInvite } from '@shared';
 
 // MongoDB document types (with ObjectId for _id)
 type UserDocument = Omit<User, '_id'> & { _id?: ObjectId };
@@ -89,6 +89,14 @@ export function getNotificationsCollection(): Collection<NotificationDocument> {
 
 export function getExperimentsCollection(): Collection<ExperimentConfig> {
   return getDb().collection<ExperimentConfig>(mongodbConfig.collections.experiments);
+}
+
+export function getWorkspaceCollection(): Collection<Workspace> {
+  return getDb().collection<Workspace>(mongodbConfig.collections.workspaces);
+}
+
+export function getWorkspaceInvitesCollection(): Collection<WorkspaceInvite> {
+  return getDb().collection<WorkspaceInvite>(mongodbConfig.collections.workspace_invites);
 }
 
 // Graceful shutdown

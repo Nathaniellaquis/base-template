@@ -26,6 +26,11 @@ export function useOnboardingNavigation() {
       } else {
         const stepInfo = ONBOARDING_STEPS[nextStep];
         if (stepInfo) {
+          console.log('[useOnboardingNavigation] Navigating to step:', {
+            nextStep,
+            stepInfo,
+            route: stepInfo.route
+          });
           router.replace(stepInfo.route as any);
         }
       }

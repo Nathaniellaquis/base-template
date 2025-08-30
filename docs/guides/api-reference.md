@@ -264,7 +264,6 @@ Creates new subscription or updates existing one.
   subscriptionId?: string
   clientSecret?: string   // For payment confirmation
   customerId?: string
-  ephemeralKey?: string   // For Stripe Elements
   amount?: number
   plan: string
   period: string
@@ -295,7 +294,7 @@ Cancels subscription at period end.
 ```typescript
 POST /trpc/payment.createPortalSession
 ```
-Creates Stripe customer portal for billing management.
+Creates customer billing portal for subscription management (Web only).
 
 **Authentication**: Required  
 **Input**:
@@ -536,22 +535,22 @@ Currently no rate limiting is implemented. This should be added before productio
 
 ## Webhooks
 
-### Stripe Webhooks
+### RevenueCat Webhooks
 ```
-POST /webhooks/stripe
+POST /webhooks/revenuecat
 ```
-Handles Stripe webhook events for subscription updates.
+Handles RevenueCat webhook events for subscription updates.
 
-**Authentication**: Stripe signature validation  
+**Authentication**: RevenueCat signature validation (if configured)  
 **Events Handled**:
-- `checkout.session.completed`
-- `customer.subscription.created`
-- `customer.subscription.updated`
-- `customer.subscription.deleted`
-- `invoice.payment_succeeded`
-- `invoice.payment_failed`
-- `payment_intent.succeeded`
-- `payment_intent.payment_failed`
+- `INITIAL_PURCHASE`
+- `RENEWAL`
+- `CANCELLATION`
+- `PRODUCT_CHANGE`
+- `BILLING_ISSUE`
+- `TRIAL_STARTED`
+- `TRIAL_CONVERTED`
+- `EXPIRATION`
 
 ## Client Usage Examples
 
@@ -614,14 +613,11 @@ curl -X POST \
 3. **Input validation** - All inputs validated with Zod schemas
 4. **Rate limiting** - Implement before production
 5. **CORS** - Configure for your domains only
-6. **Webhook validation** - Verify Stripe signatures
+6. **Webhook validation** - Verify RevenueCat signatures
 
 ## Testing
 
 Use these test values:
 - **ObjectId**: `507f1f77bcf86cd799439011` (24-char hex)
 - **Firebase UID**: Any string
-- **Stripe Test Cards**: 
-  - Success: `4242 4242 4242 4242`
-  - Requires auth: `4000 0025 0000 3155`
-  - Decline: `4000 0000 0000 9995`
+- **RevenueCat Test**: Use sandbox accounts in App Store/Play Store

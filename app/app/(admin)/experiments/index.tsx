@@ -182,12 +182,12 @@ export default function AdminExperiments() {
   const [search, setSearch] = useState('');
 
   // Get experiments list
-  const { data: experimentsData, refetch } = trpc.experiments.listExperiments.useQuery({
+  const { data: experimentsData, refetch } = trpc.experiment.listExperiments.useQuery({
     search: search || undefined,
   });
 
   // Toggle experiment status mutation
-  const toggleExperiment = trpc.experiments.updateExperimentStatus.useMutation();
+  const toggleExperiment = trpc.experiment.updateExperimentStatus.useMutation();
 
   useEffect(() => {
     if (toggleExperiment.isSuccess) {

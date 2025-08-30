@@ -6,6 +6,7 @@
 import { ObjectId } from 'mongodb';
 import { getOnboardingCollection, getUserCollection } from '@/config/mongodb';
 import { createLogger } from '@/utils/logging/logger';
+import { getTotalOnboardingSteps } from './config';
 import type { OnboardingDocument } from '@shared';
 
 const logger = createLogger('OnboardingProgressService');
@@ -30,7 +31,7 @@ export async function getOnboardingProgress(userId: string): Promise<{
     return null;
   }
   
-  const { TOTAL_ONBOARDING_STEPS } = await import('@shared');
+  const TOTAL_ONBOARDING_STEPS = getTotalOnboardingSteps();
   
   return {
     currentStep: onboarding.currentStep,
@@ -53,7 +54,7 @@ export async function updateOnboardingProgress(
   isCompleted: boolean;
 }> {
   const onboardingCollection = getOnboardingCollection();
-  const { TOTAL_ONBOARDING_STEPS } = await import('@shared');
+  const TOTAL_ONBOARDING_STEPS = getTotalOnboardingSteps();
   
   // Validate step
   if (newStep < 0 || newStep > TOTAL_ONBOARDING_STEPS) {
@@ -163,7 +164,7 @@ export async function getOnboardingStats(): Promise<{
   stepDropoff: Record<number, number>;
 }> {
   const onboardingCollection = getOnboardingCollection();
-  const { TOTAL_ONBOARDING_STEPS } = await import('@shared');
+  const TOTAL_ONBOARDING_STEPS = getTotalOnboardingSteps();
   
   const [total, completed, stepCounts] = await Promise.all([
     onboardingCollection.countDocuments(),

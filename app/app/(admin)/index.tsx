@@ -2,10 +2,9 @@ import React from 'react';
 import { ScrollView, View, ActivityIndicator, StyleSheet } from 'react-native';
 import { useTypedRouter } from '@/hooks/useTypedRouter';
 import { useAdmin } from '@/providers/admin';
-import { usePayment } from '@/providers/payment';
+import { useAuth } from '@/providers/auth';
 import { useThemedStyles } from '@/styles';
 import { Card, Text, Button } from '@/components/ui';
-import { PlanBadge } from '@/components/features/payment/PlanBadge';
 
 const createStyles = (theme: any) => StyleSheet.create({
   container: {
@@ -60,8 +59,10 @@ const createStyles = (theme: any) => StyleSheet.create({
 export default function AdminDashboard() {
   const router = useTypedRouter();
   const { stats, isLoading, refreshStats } = useAdmin();
-  const { plan } = usePayment();
+  const { user } = useAuth();
   const styles = useThemedStyles(createStyles);
+  
+  const plan = user?.subscription?.plan || 'free';
   
   if (isLoading && !stats) {
     return (
@@ -126,7 +127,9 @@ export default function AdminDashboard() {
         <View style={styles.section}>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: styles.sectionTitle.marginBottom }}>
             <Text style={styles.sectionTitle}>Admin Access</Text>
-            <PlanBadge plan={plan} size="small" />
+            <View style={{ backgroundColor: '#667eea', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 4 }}>
+              <Text style={{ color: 'white', fontSize: 12, fontWeight: '600', textTransform: 'uppercase' }}>{plan}</Text>
+            </View>
           </View>
           <Card style={styles.statContent}>
             <Text variant="body">

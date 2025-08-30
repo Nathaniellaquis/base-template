@@ -56,12 +56,11 @@ export function AnalyticsProvider({ children }: { children: React.ReactNode }) {
               // Load initial feature flags
               posthogInstance.reloadFeatureFlags();
               
-              // Get all flags after a short delay to ensure they're loaded
-              setTimeout(() => {
-                const flags = posthogInstance.getFeatureFlags();
+              // Listen for feature flags to be loaded
+              posthogInstance.onFeatureFlags((flags) => {
                 setFeatureFlags(flags || {});
                 console.log('📊 Initial feature flags:', flags);
-              }, 100);
+              });
             },
             bootstrap: {
               // Optionally bootstrap with feature flags from server/cache
@@ -93,11 +92,7 @@ export function AnalyticsProvider({ children }: { children: React.ReactNode }) {
             }
           }
 
-          // Subscribe to feature flag changes
-          posthog.onFeatureFlags((flags) => {
-            console.log('📊 Feature flags updated:', flags);
-            setFeatureFlags(flags);
-          });
+          // Note: onFeatureFlags is already set up in the loaded callback
 
           // Set the analytics instance for tracking helper
           setAnalyticsInstance(posthog);
@@ -106,8 +101,11 @@ export function AnalyticsProvider({ children }: { children: React.ReactNode }) {
         } else if (posthogInitialized) {
           // Already initialized, just update state
           setIsInitialized(true);
-          const flags = posthog.getFeatureFlags();
-          setFeatureFlags(flags || {});
+          // Feature flags are already loaded, trigger reload to get current state
+          posthog.reloadFeatureFlags();
+          posthog.onFeatureFlags((flags) => {
+            setFeatureFlags(flags || {});
+          });
         }
       } catch (error) {
         console.error('Failed to initialize web analytics:', error);

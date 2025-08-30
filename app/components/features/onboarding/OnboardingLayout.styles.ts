@@ -37,7 +37,6 @@ export const createStyles = (theme: Theme) => ({
   },
   contentContainer: {
     flex: 1,
-    overflow: 'hidden' as const,
   },
   bottomContainer: {
     backgroundColor: theme.colors.background,

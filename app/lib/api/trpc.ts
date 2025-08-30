@@ -7,8 +7,9 @@ import { createTRPCClient, httpBatchLink } from '@trpc/client';
 import { createTRPCReact } from '@trpc/react-query';
 import superjson from 'superjson';
 import type { AppRouter } from '../../../server/trpc/app';
-import { apiConfig } from '../../config';
+import { config, APP_CONFIG } from '../../config';
 import { auth } from '../../config';
+import { workspaceIdStore } from '@/providers/workspace';
 import type { Auth } from 'firebase/auth';
 
 // Create typed hooks
@@ -39,11 +40,21 @@ export const queryClient = new QueryClient({
 export const trpcClientConfig = {
   links: [
     httpBatchLink({
-      url: `${apiConfig.baseUrl}/trpc`,
+      url: `${config.api.url}/trpc`,
       transformer: superjson,
       headers: async () => {
         const token = await auth.currentUser?.getIdToken();
-        return token ? { authorization: `Bearer ${token}` } : {};
+        const headers: Record<string, string> = token ? { authorization: `Bearer ${token}` } : {};
+        
+        // Add workspace header if workspaces are enabled
+        if (APP_CONFIG.features.enableWorkspaces) {
+          const workspaceId = workspaceIdStore.getCurrentWorkspaceId();
+          if (workspaceId) {
+            headers['x-workspace-id'] = workspaceId;
+          }
+        }
+        
+        return headers;
       },
       fetch: async (url, options) => {
         try {
@@ -64,6 +75,9 @@ export const trpcClientConfig = {
 // Create vanilla client for use outside React
 export const trpcClient = createTRPCClient<AppRouter>(trpcClientConfig);
 
+// Export AppRouter type for use in other files
+export type { AppRouter };
+
 // Note: utils must be used inside components, not at top level
-// const utils = trpc.useUtils(); // ✅ Inside component
+// const utils = trpc.useContext(); // ✅ Inside component
 // const utils = trpc.useContext(); // ❌ Top level - will error

@@ -33,7 +33,7 @@ The system automatically categorizes errors:
 - **Authentication**: Invalid tokens, unauthorized access
 - **Validation**: Input validation errors, bad requests
 - **Network**: Timeouts, connection refused
-- **Payment**: Stripe errors, subscription failures
+- **Payment**: RevenueCat errors, subscription failures
 - **Rate Limiting**: Too many requests
 - **Permission**: Forbidden access, insufficient privileges
 

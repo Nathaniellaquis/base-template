@@ -1,10 +1,11 @@
 import { connectDB } from '@/config/mongodb';
 import { auth } from '@/config/firebase';
+import { config } from '@/config';
 import { createUser, findUserByUid, setUserCustomClaims } from '@/services/user';
 import { createLogger } from '@/utils/logging/logger';
-import { User } from '@shared';
+import { User, Workspace } from '@shared';
 import { type CreateExpressContextOptions } from '@trpc/server/adapters/express';
-import { type Db } from 'mongodb';
+import { type Db, ObjectId } from 'mongodb';
 
 const logger = createLogger('TRPC-Context');
 
@@ -12,6 +13,9 @@ export interface Context {
     user: User | null;
     firebaseToken: any | null; // Firebase DecodedIdToken
     db: Db;
+    // Workspace fields - only present when feature enabled
+    workspace?: Workspace;
+    workspaceId?: string;
 }
 
 export async function createContext({ req }: CreateExpressContextOptions): Promise<Context> {
@@ -59,5 +63,26 @@ export async function createContext({ req }: CreateExpressContextOptions): Promi
         }
     }
 
-    return { user, db, firebaseToken };
+    // Base context
+    const context: Context = { user, db, firebaseToken };
+
+    // Add workspace context if feature is enabled and user is authenticated
+    if (config.enableWorkspaces && user) {
+        const workspaceId = req.headers['x-workspace-id'] as string || user.currentWorkspaceId;
+        
+        if (workspaceId) {
+            // Verify user has access to this workspace
+            const workspace = await db.collection('workspaces').findOne({
+                _id: new ObjectId(workspaceId),
+                'members.userId': user._id
+            }) as Workspace | null;
+            
+            if (workspace) {
+                context.workspace = workspace;
+                context.workspaceId = workspaceId;
+            }
+        }
+    }
+
+    return context;
 }
