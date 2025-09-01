@@ -17,6 +17,7 @@ export const adminRouter = router({
   // User management
   getAllUsers: adminUsersRouter.getAllUsers,
   promoteToAdmin: adminUsersRouter.promoteToAdmin,
+  deleteUser: adminUsersRouter.deleteUser,
   
   // System stats
   getStats: adminSystemRouter.getStats,

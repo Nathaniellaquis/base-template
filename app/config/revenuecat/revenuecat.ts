@@ -23,33 +23,33 @@ export function validateRevenueCatConfig(config: {
     webKey?: string;
 }): boolean {
     const platform = Platform.OS;
-    
+
     // Check platform-specific keys
     if (platform === 'ios' && !config.iosKey) {
         console.error('[RevenueCat] Missing iOS API key');
         return false;
     }
-    
+
     if (platform === 'android' && !config.androidKey) {
         console.error('[RevenueCat] Missing Android API key');
         return false;
     }
-    
+
     if (platform === 'web' && !config.webKey) {
         console.error('[RevenueCat] Missing Web API key');
         return false;
     }
-    
+
     // Validate key format (basic check)
-    const key = platform === 'ios' ? config.iosKey : 
-                platform === 'android' ? config.androidKey : 
-                config.webKey;
-                
+    const key = platform === 'ios' ? config.iosKey :
+        platform === 'android' ? config.androidKey :
+            config.webKey;
+
     if (key && key.length < 10) {
         console.error('[RevenueCat] API key appears to be invalid (too short)');
         return false;
     }
-    
+
     return true;
 }
 

@@ -5,6 +5,7 @@
 
 import { syncUserWithRevenueCat } from '@/services/revenuecat';
 import { protectedProcedure } from '@/trpc/trpc';
+import { logger } from '@/utils/logging';
 import { TRPCError } from '@trpc/server';
 
 // Define the response type locally
@@ -24,7 +25,7 @@ export const getSubscriptionRevenueCat = protectedProcedure.query(
         const userId = ctx.user._id!; // Non-null assertion since protectedProcedure ensures user exists
 
         try {
-            console.log(`[Payment:GetSubscription] Fetching for user: ${userId}`);
+            logger.info('[Payment:GetSubscription] Fetching subscription', { userId });
 
             // Sync with RevenueCat to get latest subscription status
             const subscription = await syncUserWithRevenueCat(userId);
@@ -52,7 +53,7 @@ export const getSubscriptionRevenueCat = protectedProcedure.query(
             };
 
         } catch (error) {
-            console.error('[Payment:GetSubscription] Error fetching subscription', error);
+            logger.error('[Payment:GetSubscription] Error fetching subscription', { error });
             throw new TRPCError({
                 code: 'INTERNAL_SERVER_ERROR',
                 message: 'Failed to fetch subscription status',

@@ -4,26 +4,10 @@
  */
 
 import { updateUserSubscription } from '@/services/revenuecat/user-sync';
+import { logger } from '@/utils/logging';
 import type { PlanType } from '@shared/payment';
 import type { RevenueCatWebhookEvent } from '@shared/revenuecat';
 
-// TODO: Implement server-side analytics tracking
-// For now, we'll just log events to console
-interface AnalyticsEventData {
-    userId: string;
-    plan?: string;
-    period?: string;
-    amount?: number;
-    currency?: string;
-    [key: string]: unknown;
-}
-
-const trackSubscriptionEvent = async (
-    eventName: string, 
-    data: AnalyticsEventData
-): Promise<void> => {
-    console.log(`[Analytics] ${eventName}:`, data);
-};
 
 export async function handleWebhookEvent(event: RevenueCatWebhookEvent) {
     console.log(`[RevenueCat Handler] Processing ${event.type} for user ${event.app_user_id}`);
@@ -114,7 +98,7 @@ async function handlePurchase(event: RevenueCatWebhookEvent) {
     });
 
     // Track analytics
-    await trackSubscriptionEvent('subscription_started', {
+    await logger.info('subscription_started', {
         userId: event.app_user_id,
         plan: event.product_id,
         revenue: event.price_in_purchased_currency,
@@ -136,7 +120,7 @@ async function handleTrialStarted(event: RevenueCatWebhookEvent) {
         source: event.store,
     });
 
-    await trackSubscriptionEvent('trial_started', {
+    await logger.info('trial_started', {
         userId: event.app_user_id,
         plan: event.product_id,
         trialEndDate: event.expiration_at_ms,
@@ -151,7 +135,7 @@ async function handleTrialCancelled(event: RevenueCatWebhookEvent) {
         cancelAtPeriodEnd: true,
     });
 
-    await trackSubscriptionEvent('trial_cancelled', {
+    await logger.info('trial_cancelled', {
         userId: event.app_user_id,
         reason: event.cancellation_reason,
     });
@@ -166,7 +150,7 @@ async function handleCancellation(event: RevenueCatWebhookEvent) {
         canceledAt: new Date(),
     });
 
-    await trackSubscriptionEvent('subscription_cancelled', {
+    await logger.info('subscription_cancelled', {
         userId: event.app_user_id,
         reason: event.cancellation_reason,
         willExpireAt: event.expiration_at_ms,
@@ -182,7 +166,7 @@ async function handleUncancellation(event: RevenueCatWebhookEvent) {
         canceledAt: undefined,
     });
 
-    await trackSubscriptionEvent('subscription_reactivated', {
+    await logger.info('subscription_reactivated', {
         userId: event.app_user_id,
     });
 }
@@ -195,7 +179,7 @@ async function handleExpiration(event: RevenueCatWebhookEvent) {
         plan: 'free',
     });
 
-    await trackSubscriptionEvent('subscription_expired', {
+    await logger.info('subscription_expired', {
         userId: event.app_user_id,
         lastProduct: event.product_id,
     });
@@ -211,7 +195,7 @@ async function handleProductChange(event: RevenueCatWebhookEvent) {
         previousPlan: event.new_product_id ? mapProductToPlan(event.new_product_id) : undefined,
     });
 
-    await trackSubscriptionEvent('subscription_changed', {
+    await logger.info('subscription_changed', {
         userId: event.app_user_id,
         from: event.new_product_id, // Previous product
         to: event.product_id, // New product
@@ -226,7 +210,7 @@ async function handleBillingIssue(event: RevenueCatWebhookEvent) {
         billingIssueDetectedAt: new Date(),
     });
 
-    await trackSubscriptionEvent('billing_issue', {
+    await logger.info('billing_issue', {
         userId: event.app_user_id,
         gracePeriodEnd: event.grace_period_expiration_at_ms,
     });
@@ -244,7 +228,7 @@ async function handleTransfer(event: RevenueCatWebhookEvent) {
     // This happens when a subscription is transferred between app stores
     console.log(`[RevenueCat Handler] Subscription transferred for user ${event.app_user_id}`);
 
-    await trackSubscriptionEvent('subscription_transferred', {
+    await logger.info('subscription_transferred', {
         userId: event.app_user_id,
         from: event.transferred_from,
         to: event.transferred_to,
@@ -258,7 +242,7 @@ async function handleSubscriptionPaused(event: RevenueCatWebhookEvent) {
         status: 'paused',
     });
 
-    await trackSubscriptionEvent('subscription_paused', {
+    await logger.info('subscription_paused', {
         userId: event.app_user_id,
         resumeDate: event.expiration_at_ms,
     });

@@ -7,20 +7,14 @@ import { Platform } from 'react-native';
 
 // ======= Core Configuration & Helpers =======
 export {
-    // Validation
-    validateRevenueCatConfig,
-    
-    // Configuration
-    PRODUCT_IDS,
-    PLAN_FEATURES,
-    TRIAL_CONFIG,
-    REVENUECAT_CONFIG,
-    
+
     // Helper functions
-    entitlementToPlan,
-    planToEntitlement,
-    getHighestEntitlement,
-    getPackageIdentifier,
+    entitlementToPlan, getHighestEntitlement,
+    getPackageIdentifier, PLAN_FEATURES, planToEntitlement,
+    // Configuration
+    PRODUCT_IDS, REVENUECAT_CONFIG, TRIAL_CONFIG,
+    // Validation
+    validateRevenueCatConfig
 } from './revenuecat';
 
 // ======= Platform-Specific =======
@@ -31,14 +25,14 @@ export { REVENUECAT_WEB_KEY, WEB_CONFIG } from './revenuecat.web';
 export type {
     RevenueCatEntitlementId,
     RevenueCatPurchaseResult,
-    RevenueCatSubscriptionInfo,
+    RevenueCatSubscriptionInfo
 } from '@shared/payment';
 
 // ======= Constants (from shared) =======
 export {
     PRICING,
     REVENUECAT_ENTITLEMENTS,
-    REVENUECAT_PACKAGES,
+    REVENUECAT_PACKAGES
 } from '@shared/payment';
 
 // Import both to avoid dynamic requires

@@ -12,7 +12,6 @@ export interface User {
   // Basic info
   email: string;
   displayName?: string;
-  emailVerified?: boolean;
 
   // App fields
   role?: 'user' | 'admin';
@@ -27,19 +26,7 @@ export interface User {
   updatedAt?: Date;
 
   // Profile fields
-  bio?: string;
   phoneNumber?: string;
-  location?: string;
-  timezone?: string;
-  website?: string;
-  socialLinks?: {
-    twitter?: string;
-    linkedin?: string;
-    github?: string;
-    instagram?: string;
-  };
-  profileCompleteness?: number; // 0-100 percentage
-  lastProfileUpdate?: Date;
 
   // Notification fields
   pushTokens?: {
@@ -110,16 +97,6 @@ export const createUserSchema = z.object({});
  */
 export const updateUserSchema = z.object({
   displayName: z.string().min(1).max(50).optional(),
-  bio: z.string().max(500).optional(),
   phoneNumber: z.string().regex(/^\+?[1-9]\d{1,14}$/).optional(),
-  location: z.string().max(100).optional(),
-  timezone: z.string().optional(),
-  website: z.string().url().optional(),
-  socialLinks: z.object({
-    twitter: z.string().max(50).optional(),
-    linkedin: z.string().max(100).optional(),
-    github: z.string().max(50).optional(),
-    instagram: z.string().max(50).optional(),
-  }).optional(),
 });
 

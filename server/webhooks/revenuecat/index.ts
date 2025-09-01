@@ -6,6 +6,7 @@
 import type { RevenueCatWebhookPayload } from '@shared/revenuecat';
 import crypto from 'crypto';
 import { Router } from 'express';
+import { logger } from '@/utils/logging';
 import { handleWebhookEvent } from './handlers';
 
 const router = Router();
@@ -21,7 +22,7 @@ router.post('/webhooks/revenuecat', async (req, res) => {
         const webhookSecret = process.env.REVENUECAT_WEBHOOK_SECRET;
 
         if (webhookSecret && !verifyWebhookSignature(req.body, signature, webhookSecret)) {
-            console.error('[RevenueCat Webhook] Invalid signature');
+            logger.error('[RevenueCat Webhook] Invalid signature');
             return res.status(401).json({ error: 'Invalid signature' });
         }
 
@@ -29,14 +30,14 @@ router.post('/webhooks/revenuecat', async (req, res) => {
         const payload: RevenueCatWebhookPayload = req.body;
         const event = payload.event;
 
-        console.log(`[RevenueCat Webhook] Processing event: ${event.type} for user: ${event.app_user_id}`);
+        logger.info('[RevenueCat Webhook] Processing event', { type: event.type, userId: event.app_user_id });
 
         // Process event asynchronously
         setImmediate(async () => {
             try {
                 await handleWebhookEvent(event);
             } catch (error) {
-                console.error('[RevenueCat Webhook] Error processing event:', error);
+                logger.error('[RevenueCat Webhook] Error processing event', { error });
                 // Don't throw - we already returned 200 to RevenueCat
             }
         });
@@ -45,9 +46,10 @@ router.post('/webhooks/revenuecat', async (req, res) => {
         res.status(200).json({ received: true });
 
     } catch (error) {
-        console.error('[RevenueCat Webhook] Unexpected error:', error);
-        // Still return 200 to prevent excessive retries
-        res.status(200).json({ error: 'Processing failed but acknowledged' });
+        logger.error('[RevenueCat Webhook] Unexpected error', { error });
+        // Return 500 for actual server errors
+        // RevenueCat will retry with exponential backoff
+        res.status(500).json({ error: 'Internal server error' });
     }
 });
 

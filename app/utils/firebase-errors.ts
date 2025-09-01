@@ -73,7 +73,6 @@ const errorMessages: Record<string, string> = {
   'auth/second-factor-already-in-use': 'This second factor is already associated with another account.',
   'auth/maximum-second-factor-count-exceeded': 'Maximum number of second factors exceeded.',
   'auth/unsupported-first-factor': 'Unsupported first factor authentication method.',
-  'auth/unverified-email': 'Please verify your email before using multi-factor authentication.',
 
   // ============= TOKEN/SESSION ERRORS =============
   'auth/invalid-user-token': 'Your session has expired. Please sign in again.',
@@ -122,7 +121,6 @@ const errorMessages: Record<string, string> = {
   'auth/invalid-creation-time': 'Invalid creation time.',
   'auth/invalid-disabled-field': 'Invalid disabled field value.',
   'auth/invalid-display-name': 'Invalid display name.',
-  'auth/invalid-email-verified': 'Invalid email verified value.',
   'auth/invalid-hash-algorithm': 'Invalid hash algorithm.',
   'auth/invalid-hash-block-size': 'Invalid hash block size.',
   'auth/invalid-hash-derived-key-length': 'Invalid hash derived key length.',
@@ -168,7 +166,6 @@ const errorMessages: Record<string, string> = {
   'auth/argument-error': 'Invalid argument provided. Please check your input.',
 
   // ============= CUSTOM APP ERRORS =============
-  'auth/email-not-verified': 'Please verify your email address before signing in.',
   'auth/user-cancelled': 'Sign-in was cancelled by the user.',
   'auth/unknown-error': 'An unknown error occurred. Please try again.',
 
@@ -271,14 +268,6 @@ export function isOAuthError(error: Error | FirebaseError | string | null | unde
     error.code === 'auth/unauthorized-domain';
 }
 
-/**
- * Check if error requires email verification
- */
-export function requiresEmailVerification(error: Error | FirebaseError | string | null | undefined): boolean {
-  if (!isFirebaseError(error)) return false;
-  
-  return error.code === 'auth/email-not-verified' || error.code === 'auth/unverified-email';
-}
 
 /**
  * Check if error is due to invalid configuration
@@ -314,9 +303,6 @@ export function getSuggestedAction(error: Error | FirebaseError | string | null 
   if (isRateLimited(error)) {
     return 'Please wait a few minutes before trying again';
   }
-  if (requiresEmailVerification(error)) {
-    return 'Please verify your email address';
-  }
   if (isConfigError(error)) {
     return 'Please contact support';
   }
@@ -342,8 +328,6 @@ export function formatFirebaseError(error: Error | FirebaseError | string | null
     title = 'Too Many Attempts';
   } else if (isOAuthError(error)) {
     title = 'Sign-In Failed';
-  } else if (requiresEmailVerification(error)) {
-    title = 'Verification Required';
   } else if (isConfigError(error)) {
     title = 'Configuration Error';
   }

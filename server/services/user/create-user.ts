@@ -18,7 +18,6 @@ export async function createUser(data: {
         email: data.email,
         displayName: '',
         role: 'user' as const,
-        emailVerified: false,
         onboardingCompleted: false,
         createdAt: new Date(),
         updatedAt: new Date(),

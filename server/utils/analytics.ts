@@ -1,48 +1,85 @@
-import { config } from '@/config';
+/**
+ * Server-side Logging Utility
+ * 
+ * This module provides structured logging for server-side events.
+ * Frontend analytics are handled by PostHog in the React Native app.
+ * 
+ * Note: This is NOT an analytics service - it's for server-side logging only.
+ * For actual analytics, use PostHog on the frontend.
+ */
 
-// Simple analytics utility
-export const analytics = {
-  track: (eventName: string, properties?: Record<string, any>) => {
-    // Placeholder for analytics tracking
-    if (config.isDevelopment) {
-      console.log(`[ANALYTICS] Event: ${eventName}`, properties || {});
-    }
+import { logger } from '@/utils/logging';
+
+export const serverLogger = {
+  /**
+   * Log general server events
+   */
+  logEvent: (eventName: string, properties?: Record<string, any>) => {
+    logger.info(`[Event] ${eventName}`, properties);
   },
-  identify: (userId: string, traits?: Record<string, any>) => {
-    // Placeholder for user identification
-    if (config.isDevelopment) {
-      console.log(`[ANALYTICS] Identify: ${userId}`, traits || {});
-    }
+
+  /**
+   * Log user identification (for debugging)
+   */
+  logUserAction: (userId: string, action: string, details?: Record<string, any>) => {
+    logger.info(`[User:${userId}] ${action}`, details);
   },
-  trackError: (error: unknown, context?: Record<string, any>) => {
-    if (config.isDevelopment) {
-      console.error(`[ANALYTICS] Error:`, error, context || {});
-    }
+
+  /**
+   * Log errors with context
+   */
+  logError: (error: unknown, context?: Record<string, any>) => {
+    logger.error('[Error]', { error, context });
   },
-  trackPayment: (data: { userId: string; event: string; plan?: string; amount?: number; currency?: string; error?: string }) => {
-    if (config.isDevelopment) {
-      console.log(`[ANALYTICS] Payment:`, data);
-    }
+
+  /**
+   * Log payment-related events
+   */
+  logPayment: (data: { 
+    userId: string; 
+    event: string; 
+    plan?: string; 
+    amount?: number; 
+    currency?: string; 
+    error?: string 
+  }) => {
+    logger.info('[Payment]', data);
   },
-  trackSlowRequest: (data: { method: string; path: string; duration: number; statusCode?: number; userId?: string; ip?: string; userAgent?: string }) => {
-    if (config.isDevelopment) {
-      console.log(`[ANALYTICS] Slow Request:`, data);
-    }
+
+  /**
+   * Log slow API requests for performance monitoring
+   */
+  logSlowRequest: (data: { 
+    method: string; 
+    path: string; 
+    duration: number; 
+    statusCode?: number; 
+    userId?: string; 
+  }) => {
+    logger.warn('[Slow Request]', data);
   },
-  trackFailedProcedure: (data: { procedure: string; error: string; userId?: string; type?: string; duration?: number }) => {
-    if (config.isDevelopment) {
-      console.log(`[ANALYTICS] Failed Procedure:`, data);
-    }
+
+  /**
+   * Log failed tRPC procedures
+   */
+  logFailedProcedure: (data: { 
+    procedure: string; 
+    error: string; 
+    userId?: string; 
+    duration?: number 
+  }) => {
+    logger.error('[Failed Procedure]', data);
   },
-  trackAuthFailure: (data: { reason: string; path?: string; userId?: string; event?: string }) => {
-    if (config.isDevelopment) {
-      console.log(`[ANALYTICS] Auth Failure:`, data);
-    }
+
+  /**
+   * Log authentication failures for security monitoring
+   */
+  logAuthFailure: (data: { 
+    reason: string; 
+    path?: string; 
+    userId?: string; 
+  }) => {
+    logger.warn('[Auth Failure]', data);
   },
-  shutdown: async () => {
-    // Placeholder for graceful shutdown
-    if (config.isDevelopment) {
-      console.log(`[ANALYTICS] Shutting down...`);
-    }
-  }
 };
+

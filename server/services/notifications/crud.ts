@@ -1,6 +1,15 @@
 /**
  * Notification CRUD Operations
  * Core business logic for creating, reading, and deleting notifications
+ * 
+ * This is template infrastructure that handles:
+ * - Storing notifications in MongoDB
+ * - Sending push notifications via Expo
+ * - Checking user preferences
+ * - Managing notification lifecycle
+ * 
+ * To send notifications in your app, use the trigger functions
+ * in triggers.ts or create your own based on your business logic.
  */
 
 import { ObjectId } from 'mongodb';
@@ -14,6 +23,15 @@ const logger = createLogger('NotificationService');
 
 /**
  * Create and send a notification to a user
+ * 
+ * This function handles the full notification lifecycle:
+ * 1. Checks if user has enabled notifications
+ * 2. Checks category-specific preferences
+ * 3. Creates notification in database
+ * 4. Sends push notification if user has tokens
+ * 
+ * Call this from your business logic when events occur that
+ * should trigger notifications (new messages, reminders, etc.)
  */
 export async function createNotification(
   userId: string,
@@ -96,6 +114,23 @@ export async function createNotification(
       });
     } catch (error) {
       logger.error('Failed to send push notification', { error, userId });
+      // Update notification status to failed
+      await notifications.updateOne(
+        { _id: notificationDoc.insertedId },
+        { 
+          $set: { 
+            status: 'failed',
+            failedAt: new Date(),
+            failureReason: error instanceof Error ? error.message : 'Unknown error'
+          } 
+        }
+      );
+      // Return failure status instead of silently continuing
+      return {
+        sent: false,
+        notificationId: notificationDoc.insertedId.toString(),
+        reason: 'Failed to send push notification'
+      };
     }
   }
   

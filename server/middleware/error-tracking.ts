@@ -3,7 +3,7 @@
  * Captures and tracks all errors that occur in the application
  */
 import { Request, Response, NextFunction } from 'express';
-import { analytics } from '@/utils/analytics';
+import { serverLogger } from '@/utils/analytics';
 import { createLogger } from '@/utils/logging/logger';
 import { config } from '@/config';
 
@@ -36,7 +36,7 @@ export function performanceMiddleware(req: Request, res: Response, next: NextFun
       
       // Track slow request
       if (duration > 3000) {
-        analytics.trackSlowRequest({
+        serverLogger.logSlowRequest({
           userId,
           path: req.path,
           method: req.method,
@@ -86,7 +86,7 @@ export function errorTrackingMiddleware(err: Error, req: Request, res: Response,
   };
   
   // Track the error
-  analytics.trackError(err, context);
+  serverLogger.logError(err, context);
   
   // Log the error
   logger.error(`Error in ${req.method} ${req.path}`, err);
@@ -135,7 +135,7 @@ export function notFoundHandler(req: Request, res: Response) {
     (error as any).statusCode = 404;
     
     // Track 404 errors as they might indicate broken integrations
-    analytics.trackError(error, {
+    serverLogger.logError(error, {
       userId: (req as any).userId || undefined,
       path: req.path,
       method: req.method,
@@ -160,7 +160,7 @@ export function setupUnhandledRejectionTracking() {
     logger.error('Unhandled Promise Rejection:', reason);
     
     // Track unhandled rejection
-    analytics.trackError(reason, {
+    serverLogger.logError(reason, {
       type: 'unhandledRejection',
       promise: String(promise),
     });
@@ -170,7 +170,7 @@ export function setupUnhandledRejectionTracking() {
     logger.error('Uncaught Exception:', error);
     
     // Track uncaught exception
-    analytics.trackError(error, {
+    serverLogger.logError(error, {
       type: 'uncaughtException',
       fatal: true,
     });

@@ -10,8 +10,10 @@ import {
 } from '@shared';
 import {
   getAllUsers,
-  updateUserRole
+  updateUserRole,
+  deleteUser
 } from '@/services/admin/user-management';
+import { z } from 'zod';
 
 export const adminUsersRouter = router({
   // Get all users
@@ -35,5 +37,20 @@ export const adminUsersRouter = router({
       }
       
       return updateUserRole(ctx.user._id!, input.userId, input.role);
+    }),
+    
+  // Delete user (soft delete)
+  deleteUser: adminProcedure
+    .input(z.object({
+      userId: z.string(),
+      reason: z.string().optional()
+    }))
+    .mutation(async ({ ctx, input }) => {
+      // Don't allow self-deletion
+      if (input.userId === ctx.user._id) {
+        throw new Error('Cannot delete your own account');
+      }
+      
+      return deleteUser(ctx.user._id!, input.userId, input.reason);
     }),
 });

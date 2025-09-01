@@ -2,7 +2,7 @@ import { initTRPC, TRPCError } from '@trpc/server';
 import superjson from 'superjson';
 import { type Context } from './context';
 import { createLogger } from '@/utils/logging/logger';
-import { analytics } from '@/utils/analytics';
+import { serverLogger } from '@/utils/analytics';
 
 const logger = createLogger('TRPC');
 
@@ -12,7 +12,7 @@ const t = initTRPC.context<Context>().create({
     errorFormatter({ shape, error, type, path, input, ctx }) {
         // Track tRPC errors
         if (ctx) {
-            analytics.trackError(error, {
+            serverLogger.logError(error, {
                 userId: ctx.user?._id,
                 procedure: path,
                 type,
@@ -52,7 +52,7 @@ const logRequests = t.middleware(async ({ ctx, next, path, type }) => {
         // Only log slow procedures
         if (duration > 3000) {
             logger.warn(`Slow procedure: ${type.toUpperCase()} ${path} took ${duration}ms`);
-            analytics.trackSlowRequest({
+            serverLogger.logSlowRequest({
                 userId: ctx.user?._id,
                 path: `trpc/${path}`,
                 method: type.toUpperCase(),
@@ -68,7 +68,7 @@ const logRequests = t.middleware(async ({ ctx, next, path, type }) => {
         const duration = Date.now() - start;
         
         // Track failed procedure execution
-        analytics.trackFailedProcedure({
+        serverLogger.logFailedProcedure({
             userId: ctx.user?._id,
             procedure: path,
             type: type as 'query' | 'mutation' | 'subscription',
@@ -84,7 +84,7 @@ const logRequests = t.middleware(async ({ ctx, next, path, type }) => {
 const isAuthenticated = t.middleware(async ({ ctx, next, path }) => {
     if (!ctx.user) {
         // Track unauthorized access attempts
-        analytics.trackAuthFailure({
+        serverLogger.logAuthFailure({
             event: 'unauthorized_access',
             reason: 'No valid user session',
             path: `trpc/${path}`,
@@ -108,7 +108,7 @@ const isAuthenticated = t.middleware(async ({ ctx, next, path }) => {
 const isAdmin = t.middleware(async ({ ctx, next, path }) => {
     if (!ctx.user || ctx.user.role !== 'admin') {
         // Track admin access violations (important security event)
-        analytics.trackAuthFailure({
+        serverLogger.logAuthFailure({
             userId: ctx.user?._id,
             event: 'admin_access_denied',
             reason: ctx.user ? `User role: ${ctx.user.role}` : 'No user session',

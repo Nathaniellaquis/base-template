@@ -31,9 +31,6 @@ const envSchema = Joi.object({
     REVENUECAT_WEBHOOK_SECRET: Joi.string().optional().allow(''),
     REVENUECAT_API_URL: Joi.string().default('https://api.revenuecat.com/v1'),
     REVENUECAT_TIMEOUT: Joi.string().default('30000'),
-
-    // Optional features
-    ENABLE_WORKSPACES: Joi.boolean().default(false), // Not used anymore - see hardcoded value below
 }).unknown();
 
 // Validate environment variables

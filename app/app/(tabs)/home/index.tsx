@@ -108,20 +108,6 @@ export default function HomeScreen() {
               </View>
             )}
 
-            <View style={styles.infoRow}>
-              <Text variant="body">Email Verified</Text>
-              <Text 
-                variant="body" 
-                style={{ 
-                  color: user?.emailVerified 
-                    ? styles.dashboardContainer.backgroundColor === '#111827' ? '#34D399' : '#10B981'
-                    : styles.dashboardContainer.backgroundColor === '#111827' ? '#FBBF24' : '#F59E0B'
-                }}
-              >
-                {user?.emailVerified ? 'Yes' : 'No'}
-              </Text>
-            </View>
-
             {user?.role && (
               <View style={styles.infoRow}>
                 <Text variant="body">Role</Text>
@@ -154,15 +140,6 @@ export default function HomeScreen() {
                 Update your display name and preferences
               </Text>
             </TouchableOpacity>
-
-            {!user?.emailVerified && (
-              <TouchableOpacity style={styles.verifyButton}>
-                <Text style={styles.verifyButtonText}>Verify Email</Text>
-                <Text style={styles.verifyButtonSubtext}>
-                  Please verify your email address
-                </Text>
-              </TouchableOpacity>
-            )}
           </View>
         </Card>
       </View>

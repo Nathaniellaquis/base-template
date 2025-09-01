@@ -1,18 +1,14 @@
 /**
  * Payment Router
- * All payment-related tRPC procedures using RevenueCat
+ * Provides subscription status from RevenueCat
+ * 
+ * Note: Purchases happen client-side via RevenueCat SDKs
+ * See docs/features/payment.md for complete flow documentation
  */
 
 import { router } from '@/trpc/trpc';
-
-// RevenueCat implementations
-import { cancelRevenueCat } from './cancel-revenuecat';
 import { getSubscriptionRevenueCat } from './get-subscription-revenuecat';
-import { subscribeRevenueCat } from './subscribe-revenuecat';
 
 export const paymentRouter = router({
-    // Subscription management
     getSubscription: getSubscriptionRevenueCat,
-    subscribe: subscribeRevenueCat,
-    cancel: cancelRevenueCat,
 });

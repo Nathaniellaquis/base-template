@@ -61,9 +61,6 @@ export default function SettingsScreen() {
   // Form state with initial values from user
   const [formData, setFormData] = useState({
     displayName: user?.displayName || '',
-    bio: user?.bio || '',
-    location: user?.location || '',
-    website: user?.website || '',
   });
 
   // Update form data when user changes
@@ -71,9 +68,6 @@ export default function SettingsScreen() {
     if (user && !isEditing) {
       setFormData({
         displayName: user.displayName || '',
-        bio: user.bio || '',
-        location: user.location || '',
-        website: user.website || '',
       });
     }
   }, [user, isEditing]);
@@ -123,9 +117,6 @@ export default function SettingsScreen() {
 
     updateUser.mutate({
       displayName: trimmedName,
-      bio: formData.bio.trim() || undefined,
-      location: formData.location.trim() || undefined,
-      website: formData.website.trim() || undefined
     });
   }, [formData, updateUser]);
 
@@ -231,9 +222,6 @@ export default function SettingsScreen() {
                       setIsEditing(false);
                       setFormData({
                         displayName: user?.displayName || '',
-                        bio: user?.bio || '',
-                        location: user?.location || '',
-                        website: user?.website || '',
                       });
                     }}
                     style={styles.saveButton}
@@ -258,66 +246,11 @@ export default function SettingsScreen() {
 
           {isEditing && (
             <>
-              <View style={styles.infoRow}>
-                <Text style={styles.label}>Bio</Text>
-                <Input
-                  value={formData.bio}
-                  onChangeText={(text) => setFormData(prev => ({ ...prev, bio: text }))}
-                  placeholder="Tell us about yourself"
-                  multiline
-                  numberOfLines={3}
-                  maxLength={500}
-                  containerStyle={styles.editInputContainer}
-                />
-              </View>
-
-              <View style={styles.infoRow}>
-                <Text style={styles.label}>Location</Text>
-                <Input
-                  value={formData.location}
-                  onChangeText={(text) => setFormData(prev => ({ ...prev, location: text }))}
-                  placeholder="Your location"
-                  maxLength={100}
-                  containerStyle={styles.editInputContainer}
-                />
-              </View>
-
-              <View style={styles.infoRow}>
-                <Text style={styles.label}>Website</Text>
-                <Input
-                  value={formData.website}
-                  onChangeText={(text) => setFormData(prev => ({ ...prev, website: text }))}
-                  placeholder="https://example.com"
-                  keyboardType="url"
-                  autoCapitalize="none"
-                  containerStyle={styles.editInputContainer}
-                />
-              </View>
             </>
           )}
 
           {!isEditing && (
             <>
-              {user?.bio && (
-                <View style={styles.infoRow}>
-                  <Text style={styles.label}>Bio</Text>
-                  <Text variant="body">{user.bio}</Text>
-                </View>
-              )}
-
-              {user?.location && (
-                <View style={styles.infoRow}>
-                  <Text style={styles.label}>Location</Text>
-                  <Text variant="body">{user.location}</Text>
-                </View>
-              )}
-
-              {user?.website && (
-                <View style={styles.infoRow}>
-                  <Text style={styles.label}>Website</Text>
-                  <Text variant="body">{user.website}</Text>
-                </View>
-              )}
             </>
           )}
 
@@ -424,17 +357,6 @@ export default function SettingsScreen() {
             onPress={handleResetPassword}
             style={styles.buttonSpacing}
           />
-
-          {!user?.emailVerified && (
-            <View style={styles.warningBanner}>
-              <Text style={styles.warningTitle}>
-                Verify Email
-              </Text>
-              <Text style={styles.warningText}>
-                Your email is not verified
-              </Text>
-            </View>
-          )}
         </Card>
 
         {/* Admin Section */}

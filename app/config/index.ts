@@ -95,25 +95,17 @@ export {
 
 // RevenueCat exports
 export {
-    // Validation
-    validateRevenueCatConfig,
-    
-    // Configuration & Constants
-    REVENUECAT_CONFIG,
-    PRODUCT_IDS,
-    PLAN_FEATURES,
-    TRIAL_CONFIG,
-    
-    // Helper Functions
-    getRevenueCatApiKey,
-    entitlementToPlan,
-    planToEntitlement,
-    getHighestEntitlement,
-    getPackageIdentifier,
-    
-    // Types
-    type PurchaseResult,
-    type SubscriptionInfo,
+  entitlementToPlan, getHighestEntitlement,
+  getPackageIdentifier,
+  // Helper Functions
+  getRevenueCatApiKey, PLAN_FEATURES, planToEntitlement, PRODUCT_IDS,
+  // Configuration & Constants
+  REVENUECAT_CONFIG, TRIAL_CONFIG,
+  // Validation
+  validateRevenueCatConfig,
+  // Types
+  type PurchaseResult,
+  type SubscriptionInfo
 } from './revenuecat';
 
 // ============================================

@@ -4,6 +4,7 @@
  */
 
 import { getUserCollection } from '@/config/mongodb';
+import { logger } from '@/utils/logging';
 import type { BillingPeriod, PlanType } from '@shared/payment';
 import type { RevenueCatCustomerInfo, RevenueCatStore } from '@shared/revenuecat';
 import { ObjectId } from 'mongodb';
@@ -41,7 +42,7 @@ export async function updateUserSubscription(data: UpdateSubscriptionData): Prom
         const usersCollection = getUserCollection();
         const user = await usersCollection.findOne({ _id: new ObjectId(data.userId) });
         if (!user) {
-            console.error(`[RevenueCat UserSync] User not found: ${data.userId}`);
+            logger.error('[RevenueCat UserSync] User not found', { userId: data.userId });
             // Try to find by RevenueCat ID if different
             const userByRevenueCatId = await usersCollection.findOne({ revenueCatId: data.userId });
             if (!userByRevenueCatId) {
@@ -122,10 +123,10 @@ export async function updateUserSubscription(data: UpdateSubscriptionData): Prom
             updateData
         );
 
-        console.log(`[RevenueCat UserSync] Updated subscription for user ${data.userId}`);
+        logger.info('[RevenueCat UserSync] Updated subscription', { userId: data.userId });
 
     } catch (error) {
-        console.error('[RevenueCat UserSync] Error updating subscription:', error);
+        logger.error('[RevenueCat UserSync] Error updating subscription', { error });
         throw error;
     }
 }
@@ -177,7 +178,7 @@ export async function syncUserWithRevenueCat(userId: string): Promise<any> {
             return null;
         }
 
-        console.error('[RevenueCat UserSync] Sync error:', error);
+        logger.error('[RevenueCat UserSync] Sync error', { error });
         throw error;
     }
 }

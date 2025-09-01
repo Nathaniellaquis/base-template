@@ -1,13 +1,10 @@
 /**
  * Notification Preferences Service
- * Business logic for managing user notification preferences
  */
 
 import { ObjectId } from 'mongodb';
 import { getUserCollection } from '@/config/mongodb';
-import { createLogger } from '@/utils/logging/logger';
-
-const logger = createLogger('NotificationPreferencesService');
+import { logger } from '@/utils/logging';
 
 /**
  * Update notification preferences for a user
@@ -15,27 +12,28 @@ const logger = createLogger('NotificationPreferencesService');
 export async function updateNotificationPreferences(
   userId: string,
   preferences: {
-    enabled: boolean;
+    enabled?: boolean;
     updates?: boolean;
     reminders?: boolean;
     social?: boolean;
   }
 ): Promise<{ success: boolean }> {
-  const users = getUserCollection();
+  const usersCollection = getUserCollection();
   
-  const result = await users.updateOne(
+  await usersCollection.updateOne(
     { _id: new ObjectId(userId) },
-    { $set: { notificationPreferences: {
-      enabled: preferences.enabled,
-      updates: preferences.updates ?? true,
-      reminders: preferences.reminders ?? true,
-      social: preferences.social ?? true
-    } } }
+    { 
+      $set: { 
+        notificationPreferences: {
+          enabled: preferences.enabled ?? true,
+          updates: preferences.updates ?? true,
+          reminders: preferences.reminders ?? true,
+          social: preferences.social ?? true
+        },
+        updatedAt: new Date()
+      } 
+    }
   );
-  
-  if (result.matchedCount === 0) {
-    throw new Error('User not found');
-  }
   
   logger.info('Updated notification preferences', { userId });
   

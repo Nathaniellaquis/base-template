@@ -7,7 +7,7 @@ import {
     setupUnhandledRejectionTracking
 } from '@/middleware/error-tracking';
 import { createTRPCMiddleware } from '@/trpc/app';
-import { analytics } from '@/utils/analytics';
+import { serverLogger } from '@/utils/analytics';
 import { createLogger } from '@/utils/logging/logger';
 import revenueCatWebhookRouter from '@/webhooks/revenuecat';
 import cors from 'cors';
@@ -70,7 +70,7 @@ app.get('/health', async (req, res) => {
         });
     } catch (error) {
         // Only track health check failures (negative event)
-        analytics.trackError(error, {
+        serverLogger.logError(error, {
             path: '/health',
             type: 'health_check_failed',
             severity: 'critical' // Database down is critical
@@ -108,7 +108,7 @@ process.on('SIGTERM', async () => {
         logger.info('HTTP server closed');
 
         // Shutdown analytics
-        await analytics.shutdown();
+        // No shutdown needed for logger
 
         // Close database connection
         const { closeDB } = await import('@/db');
@@ -120,7 +120,7 @@ process.on('SIGTERM', async () => {
     // Force shutdown after 10 seconds
     setTimeout(() => {
         // This IS a negative event - forced shutdown indicates a problem
-        analytics.trackError(new Error('Forced shutdown after timeout'), {
+        serverLogger.logError(new Error('Forced shutdown after timeout'), {
             type: 'forced_shutdown',
             uptime: process.uptime(),
             severity: 'high'

@@ -4,7 +4,6 @@ import { getUserCollection } from '@/config/mongodb';
 import { protectedProcedure } from '@/trpc/trpc';
 import { mongoDocToUser } from '@/utils/database/mongodb';
 import { errors } from '@/utils/errors';
-import { calculateProfileCompleteness } from '@/services/user';
 
 export const updateUser = protectedProcedure
     .input(updateUserSchema)
@@ -23,19 +22,12 @@ export const updateUser = protectedProcedure
             throw errors.notFound('User');
         }
 
-        // Merge updates with current user
-        const updatedUserData = { ...currentUser, ...input };
-        
-        // Calculate profile completeness
-        const profileCompleteness = calculateProfileCompleteness(updatedUserData as any);
 
         const updatedUserResult = await usersCollection.findOneAndUpdate(
             { _id: new ObjectId(ctx.user._id) },
             {
                 $set: {
                     ...input,
-                    profileCompleteness,
-                    lastProfileUpdate: new Date(),
                     updatedAt: new Date(),
                 }
             },

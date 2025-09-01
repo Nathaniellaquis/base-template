@@ -78,6 +78,9 @@ export default function AdminUsers() {
   // Promote/demote mutation
   const updateRole = trpc.admin.promoteToAdmin.useMutation();
   
+  // Delete user mutation
+  const deleteUserMutation = trpc.admin.deleteUser.useMutation();
+  
   useEffect(() => {
     if (updateRole.isSuccess && updateRole.data) {
       Alert.alert(
@@ -91,6 +94,16 @@ export default function AdminUsers() {
     }
   }, [updateRole.isSuccess, updateRole.isError, updateRole.data, updateRole.error?.message, refetch]);
   
+  useEffect(() => {
+    if (deleteUserMutation.isSuccess) {
+      Alert.alert('Success', 'User has been deleted');
+      refetch();
+    }
+    if (deleteUserMutation.isError) {
+      Alert.alert('Error', deleteUserMutation.error?.message || 'Failed to delete user');
+    }
+  }, [deleteUserMutation.isSuccess, deleteUserMutation.isError, deleteUserMutation.error?.message, refetch]);
+  
   const handleRoleChange = (userId: string, currentRole?: string) => {
     const newRole = currentRole === 'admin' ? 'user' : 'admin';
     const action = newRole === 'admin' ? 'promote' : 'demote';
@@ -103,6 +116,36 @@ export default function AdminUsers() {
         {
           text: 'Confirm',
           onPress: () => updateRole.mutate({ userId, role: newRole }),
+        },
+      ]
+    );
+  };
+  
+  const handleDeleteUser = (userId: string, email: string) => {
+    Alert.alert(
+      'Delete User',
+      `Are you sure you want to delete ${email}? This action cannot be undone.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: () => {
+            Alert.prompt(
+              'Confirm Deletion',
+              'Please provide a reason for deletion (optional):',
+              [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                  text: 'Delete',
+                  style: 'destructive',
+                  onPress: (reason) => deleteUserMutation.mutate({ userId, reason }),
+                },
+              ],
+              'plain-text',
+              ''
+            );
+          },
         },
       ]
     );
@@ -148,6 +191,14 @@ export default function AdminUsers() {
             size="small"
             onPress={() => handleRoleChange(item._id?.toString() || item._id || item.uid || '', item.role)}
             disabled={isCurrentUser || updateRole.isPending}
+            style={styles.actionButton}
+          />
+          <Button
+            title="Delete User"
+            variant="danger"
+            size="small"
+            onPress={() => handleDeleteUser(item._id?.toString() || item._id || item.uid || '', item.email)}
+            disabled={isCurrentUser || deleteUserMutation.isPending}
             style={styles.actionButton}
           />
         </View>

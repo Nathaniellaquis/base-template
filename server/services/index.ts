@@ -19,16 +19,12 @@ export * as experimentService from './experiment';
 // Onboarding services
 export * as onboardingService from './onboarding';
 
-// Stripe services
-export * as stripeService from './stripe';
-
 // Re-export commonly used functions directly
 export {
   // User
   createUser,
   findUserByUid,
-  setUserCustomClaims,
-  calculateProfileCompleteness
+  setUserCustomClaims
 } from './user';
 
 export {

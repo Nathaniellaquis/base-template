@@ -224,6 +224,10 @@ Cancellation:
 Billing Issues:
 1. BILLING_ISSUE → Enable grace period
 2. RENEWAL (if recovered) → Restore active status
+
+Note: All purchases and cancellations are handled directly by RevenueCat SDKs.
+The backend only has one endpoint: getSubscription (for syncing status).
+No server-side purchase/cancel endpoints exist or are needed.
 ```
 
 ### State Management
