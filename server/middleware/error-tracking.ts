@@ -42,11 +42,13 @@ export function performanceMiddleware(req: Request, res: Response, next: NextFun
           method: req.method,
           statusCode: res.statusCode,
           duration,
-          ip: req.ip || req.connection.remoteAddress,
-          userAgent: req.headers['user-agent'],
         });
         
-        logger.warn(`Slow request: ${req.method} ${req.path} took ${duration}ms`);
+        // Log additional details separately for debugging
+        logger.warn(`Slow request: ${req.method} ${req.path} took ${duration}ms`, {
+          ip: req.ip || (req.connection as any)?.remoteAddress,
+          userAgent: req.headers['user-agent'],
+        });
       }
     }
     
