@@ -51,6 +51,7 @@ export const adminUsersRouter = router({
         throw new Error('Cannot delete your own account');
       }
       
-      return deleteUser(ctx.user._id!, input.userId, input.reason);
+      // Note: reason is accepted in input but not currently used in deleteUser function
+      return deleteUser(ctx.user._id!, input.userId);
     }),
 });

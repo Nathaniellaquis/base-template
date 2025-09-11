@@ -13,21 +13,21 @@ export const workspaceRouterStub = router({
     });
   }),
 
-  create: protectedProcedure.input(null as any).mutation(async () => {
+  create: protectedProcedure.mutation(async () => {
     throw new TRPCError({
       code: 'NOT_IMPLEMENTED',
       message: 'Workspaces feature is disabled',
     });
   }),
 
-  switch: protectedProcedure.input(null as any).mutation(async () => {
+  switch: protectedProcedure.mutation(async () => {
     throw new TRPCError({
       code: 'NOT_IMPLEMENTED',
       message: 'Workspaces feature is disabled',
     });
   }),
 
-  invite: protectedProcedure.input(null as any).mutation(async () => {
+  invite: protectedProcedure.mutation(async () => {
     throw new TRPCError({
       code: 'NOT_IMPLEMENTED',
       message: 'Workspaces feature is disabled',

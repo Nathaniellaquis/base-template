@@ -71,10 +71,12 @@ const logRequests = t.middleware(async ({ ctx, next, path, type }) => {
         serverLogger.logFailedProcedure({
             userId: ctx.user?._id,
             procedure: path,
-            type: type as 'query' | 'mutation' | 'subscription',
             duration,
             error: error instanceof Error ? error.message : String(error),
         });
+        
+        // Log additional details for debugging
+        logger.error(`Failed ${type} procedure: ${path}`, error);
         
         throw error;
     }
@@ -85,10 +87,12 @@ const isAuthenticated = t.middleware(async ({ ctx, next, path }) => {
     if (!ctx.user) {
         // Track unauthorized access attempts
         serverLogger.logAuthFailure({
-            event: 'unauthorized_access',
             reason: 'No valid user session',
             path: `trpc/${path}`,
         });
+        
+        // Log additional details for debugging
+        logger.warn('Unauthorized access attempt', { event: 'unauthorized_access', path });
         
         throw new TRPCError({
             code: 'UNAUTHORIZED',
@@ -110,10 +114,12 @@ const isAdmin = t.middleware(async ({ ctx, next, path }) => {
         // Track admin access violations (important security event)
         serverLogger.logAuthFailure({
             userId: ctx.user?._id,
-            event: 'admin_access_denied',
             reason: ctx.user ? `User role: ${ctx.user.role}` : 'No user session',
             path: `trpc/${path}`,
         });
+        
+        // Log additional details for debugging
+        logger.warn('Admin access denied', { event: 'admin_access_denied', userId: ctx.user?._id, path });
         
         throw new TRPCError({
             code: 'FORBIDDEN',
