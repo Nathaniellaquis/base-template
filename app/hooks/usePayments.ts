@@ -17,6 +17,7 @@ import {
     PRICING,
     REVENUECAT_CONFIG,
 } from '@/config/revenuecat';
+import { config } from '@/config';
 import { trackPaywall } from '@/lib/analytics/tracking';
 import { useAuth } from '@/providers/auth';
 import type {
@@ -140,8 +141,7 @@ export const usePayments = (): UsePaymentsReturn => {
                     PurchasesJS = await import('@revenuecat/purchases-js');
                 }
 
-                const { REVENUECAT_WEB_KEY } = await import('@/config/revenuecat');
-                const apiKey = REVENUECAT_WEB_KEY;
+                const apiKey = config.revenuecat.webKey;
                 if (!apiKey) {
                     throw new Error('RevenueCat Web API key not configured');
                 }
@@ -184,7 +184,7 @@ export const usePayments = (): UsePaymentsReturn => {
                     Purchases = RNPurchases.default;
                 }
 
-                const apiKey = getRevenueCatApiKey();
+                const apiKey = getRevenueCatApiKey(config.revenuecat);
                 if (!apiKey) {
                     throw new Error('RevenueCat API key not configured');
                 }

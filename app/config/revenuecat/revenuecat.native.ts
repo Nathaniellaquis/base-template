@@ -5,19 +5,11 @@
 
 import { Platform } from 'react-native';
 
-import { config } from '../';
-
-// Native-specific API Keys
-export const REVENUECAT_NATIVE_KEYS = {
-    ios: config.revenuecat.iosKey,
-    android: config.revenuecat.androidKey,
-};
-
 // Get the appropriate API key for the current platform
-export const getNativeApiKey = (): string => {
+export const getNativeApiKey = (iosKey: string, androidKey: string): string => {
     return Platform.select({
-        ios: REVENUECAT_NATIVE_KEYS.ios,
-        android: REVENUECAT_NATIVE_KEYS.android,
+        ios: iosKey,
+        android: androidKey,
         default: '',
     }) || '';
 };

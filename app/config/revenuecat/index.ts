@@ -19,7 +19,7 @@ export {
 
 // ======= Platform-Specific =======
 export { getNativeApiKey, NATIVE_CONFIG } from './revenuecat.native';
-export { REVENUECAT_WEB_KEY, WEB_CONFIG } from './revenuecat.web';
+export { WEB_CONFIG } from './revenuecat.web';
 
 // ======= Types (from shared) =======
 export type {
@@ -35,16 +35,15 @@ export {
     REVENUECAT_PACKAGES
 } from '@shared/payment';
 
-// Import both to avoid dynamic requires
+// Import function to avoid dynamic requires
 import { getNativeApiKey } from './revenuecat.native';
-import { REVENUECAT_WEB_KEY } from './revenuecat.web';
 
-// Platform-agnostic API key getter
-export const getRevenueCatApiKey = (): string => {
+// Platform-agnostic API key getter - now takes config as parameter
+export const getRevenueCatApiKey = (config: { iosKey: string; androidKey: string; webKey: string }): string => {
     if (Platform.OS === 'web') {
-        return REVENUECAT_WEB_KEY;
+        return config.webKey;
     }
-    return getNativeApiKey();
+    return getNativeApiKey(config.iosKey, config.androidKey);
 };
 
 // Re-export specific types for convenience

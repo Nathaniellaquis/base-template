@@ -64,8 +64,8 @@ export const config: AppConfig = {
     appId: validateEnv('EXPO_PUBLIC_FIREBASE_APP_ID'),
   },
   posthog: {
-    apiKey: validateEnv('EXPO_PUBLIC_POSTHOG_API_KEY'),
-    host: validateEnv('EXPO_PUBLIC_POSTHOG_HOST', 'https://app.posthog.com'),
+    apiKey: process.env.EXPO_PUBLIC_POSTHOG_API_KEY || '',
+    host: process.env.EXPO_PUBLIC_POSTHOG_HOST || 'https://app.posthog.com',
   },
   revenuecat: {
     iosKey: validateEnv('EXPO_PUBLIC_REVENUECAT_IOS_KEY', ''),

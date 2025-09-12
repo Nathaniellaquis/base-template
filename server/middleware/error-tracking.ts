@@ -2,10 +2,10 @@
  * Error Tracking Middleware for Express
  * Captures and tracks all errors that occur in the application
  */
-import { Request, Response, NextFunction } from 'express';
+import { config } from '@/config';
 import { serverLogger } from '@/utils/analytics';
 import { createLogger } from '@/utils/logging/logger';
-import { config } from '@/config';
+import { NextFunction, Request, Response } from 'express';
 
 const logger = createLogger('ErrorTracking');
 
@@ -15,25 +15,25 @@ const logger = createLogger('ErrorTracking');
  */
 export function performanceMiddleware(req: Request, res: Response, next: NextFunction) {
   const startTime = Date.now();
-  
+
   // Store original end function
   const originalEnd = res.end;
-  
+
   // Override end function to track slow requests only
-  res.end = function(...args: any[]) {
+  res.end = function (...args: any[]) {
     // Restore original end function
     res.end = originalEnd;
-    
+
     // Calculate duration
     const duration = Date.now() - startTime;
-    
+
     // Only track if request is slow or failed
     if (duration > 3000 || res.statusCode >= 400) {
-      const userId = (req as any).userId || 
-                     (req as any).user?._id || 
-                     (req as any).auth?.uid ||
-                     undefined;
-      
+      const userId = (req as any).userId ||
+        (req as any).user?._id ||
+        (req as any).auth?.uid ||
+        undefined;
+
       // Track slow request
       if (duration > 3000) {
         serverLogger.logSlowRequest({
@@ -43,7 +43,7 @@ export function performanceMiddleware(req: Request, res: Response, next: NextFun
           statusCode: res.statusCode,
           duration,
         });
-        
+
         // Log additional details separately for debugging
         logger.warn(`Slow request: ${req.method} ${req.path} took ${duration}ms`, {
           ip: req.ip || (req.connection as any)?.remoteAddress,
@@ -51,11 +51,11 @@ export function performanceMiddleware(req: Request, res: Response, next: NextFun
         });
       }
     }
-    
+
     // Call original end function
     return originalEnd.apply(res, args as any);
   };
-  
+
   next();
 }
 
@@ -65,11 +65,11 @@ export function performanceMiddleware(req: Request, res: Response, next: NextFun
  */
 export function errorTrackingMiddleware(err: Error, req: Request, res: Response, next: NextFunction) {
   // Get request context
-  const userId = (req as any).userId || 
-                 (req as any).user?._id || 
-                 (req as any).auth?.uid ||
-                 undefined;
-  
+  const userId = (req as any).userId ||
+    (req as any).user?._id ||
+    (req as any).auth?.uid ||
+    undefined;
+
   const context = {
     userId,
     path: req.path,
@@ -86,33 +86,33 @@ export function errorTrackingMiddleware(err: Error, req: Request, res: Response,
       cookie: undefined,
     },
   };
-  
+
   // Track the error
   serverLogger.logError(err, context);
-  
+
   // Log the error
   logger.error(`Error in ${req.method} ${req.path}`, err);
-  
+
   // Determine status code
   const statusCode = (err as any).statusCode || (err as any).status || 500;
-  
+
   // Prepare error response
   const errorResponse: any = {
     error: true,
     message: err.message || 'Internal server error',
   };
-  
+
   // In development, include stack trace
   if (config.isDevelopment) {
     errorResponse.stack = err.stack;
     errorResponse.details = err;
   }
-  
+
   // Add request ID if available
   if ((req as any).id) {
     errorResponse.requestId = (req as any).id;
   }
-  
+
   // Send error response
   res.status(statusCode).json(errorResponse);
 }
@@ -135,7 +135,7 @@ export function notFoundHandler(req: Request, res: Response) {
   if (req.path.startsWith('/api') || req.path.startsWith('/trpc')) {
     const error = new Error(`Route not found: ${req.method} ${req.path}`);
     (error as any).statusCode = 404;
-    
+
     // Track 404 errors as they might indicate broken integrations
     serverLogger.logError(error, {
       userId: (req as any).userId || undefined,
@@ -145,7 +145,7 @@ export function notFoundHandler(req: Request, res: Response) {
       category: '404',
     });
   }
-  
+
   res.status(404).json({
     error: true,
     message: 'Route not found',
@@ -160,23 +160,23 @@ export function notFoundHandler(req: Request, res: Response) {
 export function setupUnhandledRejectionTracking() {
   process.on('unhandledRejection', (reason: any, promise: Promise<any>) => {
     logger.error('Unhandled Promise Rejection:', reason);
-    
+
     // Track unhandled rejection
     serverLogger.logError(reason, {
       type: 'unhandledRejection',
       promise: String(promise),
     });
   });
-  
+
   process.on('uncaughtException', (error: Error) => {
     logger.error('Uncaught Exception:', error);
-    
+
     // Track uncaught exception
     serverLogger.logError(error, {
       type: 'uncaughtException',
       fatal: true,
     });
-    
+
     // Give time for error to be tracked before exiting
     setTimeout(() => {
       process.exit(1);
